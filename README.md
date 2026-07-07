@@ -44,6 +44,8 @@ npx hexo publish post "流水线冒险笔记"
 
 `/editor/` 是本地浏览器草稿箱和 Markdown 生成器。它会把草稿保存在当前浏览器的 `localStorage`，不会自动写入 GitHub 仓库。
 
+编辑器中的“主分类”建议只填写一个值，例如 `Reading Notes`。Hexo 会把多个 `categories` 条目解释成层级分类，不是并列分类；更细的主题请放进 `tags`，例如 `digital-design, systemverilog, verilog`。
+
 推荐流程：
 
 ```text

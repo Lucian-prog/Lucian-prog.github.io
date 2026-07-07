@@ -267,10 +267,19 @@ const splitDraftList = (value) => value
 
 const formatYamlList = (items) => {
   if (!items.length) return '  - Notes';
-  return items.map((item) => `  - ${item}`).join('\n');
+  return items.map((item) => `  - ${quoteYaml(item)}`).join('\n');
 };
 
 const quoteYaml = (value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+
+const formatLocalDateTime = (date = new Date()) => {
+  const pad = (value) => String(value).padStart(2, '0');
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate())
+  ].join('-') + ` ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+};
 
 const stripMarkup = (value = '') => value
   .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -432,9 +441,9 @@ if (editorPage) {
       id,
       title: '新的学习笔记',
       slug: 'new-learning-note',
-      categories: 'Reading Notes, Digital Design',
-      tags: 'digital-design, risc-v',
-      excerpt: '这是一篇新的学习笔记摘要，用于首页和文章列表展示。',
+      categories: 'Reading Notes',
+      tags: 'digital-design, systemverilog, verilog',
+      excerpt: '记录一个具体问题、核心结论和后续复盘方向。',
       body: defaultDraftBody,
       createdAt: now,
       updatedAt: now,
@@ -479,20 +488,21 @@ if (editorPage) {
   const buildMarkdown = () => {
     const title = titleInput.value.trim() || '未命名文章';
     const slug = slugifyDraft(slugInput.value || title);
-    const categories = splitDraftList(categoriesInput.value);
-    const tags = splitDraftList(tagsInput.value);
+    const categoryValues = splitDraftList(categoriesInput.value);
+    const category = categoryValues[0] || 'Notes';
+    const tags = Array.from(new Set([...splitDraftList(tagsInput.value), ...categoryValues.slice(1)]));
     const excerpt = excerptInput.value.trim();
     const body = bodyInput.value.trimEnd();
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDateTime();
 
     return {
       title,
       slug,
-      categories,
+      categories: [category],
       tags,
       excerpt,
       body,
-      markdown: `---\ntitle: ${quoteYaml(title)}\ndate: ${today}\ncategories:\n${formatYamlList(categories)}\ntags:\n${formatYamlList(tags)}\nexcerpt: ${quoteYaml(excerpt)}\n---\n\n${body}\n`
+      markdown: `---\ntitle: ${quoteYaml(title)}\ndate: ${today}\ncategories:\n${formatYamlList([category])}\ntags:\n${formatYamlList(tags)}\nexcerpt: ${quoteYaml(excerpt)}\n---\n\n${body}\n`
     };
   };
 
