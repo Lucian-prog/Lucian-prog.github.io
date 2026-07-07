@@ -6,7 +6,7 @@
   const tagCount = site.tags.length;
 %>
 
-<header class="portal-card">
+<header class="portal-card reveal">
   <div class="portal-mark" aria-hidden="true">⚙</div>
   <div class="avatar-container">
     <img class="avatar" src="<%= config.lucian.hero.avatar %>" alt="Lucian avatar">
@@ -25,7 +25,7 @@
 <h2 class="section-title">Knowledge Matrix</h2>
 <section class="topics-grid">
   <% config.lucian.topics.forEach((topic) => { %>
-    <a class="topic-card" href="<%= topic.url %>">
+    <a class="topic-card reveal" href="<%= topic.url %>">
       <div class="topic-title"><%= topic.title %></div>
       <div class="topic-desc"><%= topic.desc %></div>
     </a>
@@ -33,7 +33,7 @@
 </section>
 
 <h2 class="section-title">Current Main Thread</h2>
-<section class="learning-thread">
+<section class="learning-thread reveal">
   <div class="thread-header">
     <div class="thread-title"><%= config.lucian.main_thread.title %></div>
     <div class="thread-status">Progress: <%= config.lucian.main_thread.progress %>%</div>
@@ -50,7 +50,7 @@
 <h2 class="section-title">Latest Notes</h2>
 <section class="article-list">
   <% latestPosts.forEach((post) => { %>
-    <article class="article-card">
+    <article class="article-card reveal">
       <div class="article-meta">
         <span><%= date(post.date, 'YYYY-MM-DD') %></span>
         <% if (post.categories && post.categories.length) { %>
@@ -76,6 +76,6 @@
 <h2 class="section-title">Projects & Labs</h2>
 <section class="projects-grid">
   <% config.lucian.projects.forEach((project) => { %>
-    <a class="project-chip" href="<%= project.url %>"><%= project.title %></a>
+    <a class="project-chip reveal" href="<%= project.url %>"><%= project.title %></a>
   <% }) %>
 </section>

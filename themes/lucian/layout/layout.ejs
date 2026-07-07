@@ -11,6 +11,15 @@
   <%- css('/css/style.css') %>
 </head>
 <body>
+  <div class="site-loader" aria-hidden="true">
+    <div class="loader-clock">
+      <span></span>
+    </div>
+    <div class="loader-text">女仆整理时间轴中...</div>
+  </div>
+
+  <div class="ambient-layer" aria-hidden="true"></div>
+
   <nav class="top-nav">
     <a class="nav-logo" href="/"><%= config.lucian.hero.logo %></a>
     <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">☰</button>
@@ -29,6 +38,10 @@
     <span>© <%= date(new Date(), 'YYYY') %> Lucian</span>
     <span>Powered by Hexo · Theme Lucian</span>
   </footer>
+
+  <button class="back-to-top" type="button" aria-label="返回顶部">
+    <span></span>
+  </button>
 
   <%- js('/js/main.js') %>
 </body>
