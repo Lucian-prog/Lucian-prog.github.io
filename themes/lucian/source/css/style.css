@@ -16,6 +16,17 @@
   --code-bg: #171923;
   --code-panel: #151722;
   --code-text: #f6c177;
+  --syntax-keyword: #ff7aa2;
+  --syntax-type: #7dcfff;
+  --syntax-number: #ff9e64;
+  --syntax-string: #9ece6a;
+  --syntax-comment: #6b7394;
+  --syntax-title: #bb9af7;
+  --syntax-variable: #c0caf5;
+  --syntax-operator: #89ddff;
+  --syntax-meta: #e0af68;
+  --syntax-deletion: #f7768e;
+  --syntax-addition: #9ece6a;
   --ring-line: rgba(192, 202, 245, 0.06);
   --ring-mark: rgba(192, 202, 245, 0.08);
   --nav-border: rgba(65, 72, 104, 0.55);
@@ -45,6 +56,17 @@
   --code-bg: #0b1220;
   --code-panel: #0c1322;
   --code-text: #9ece6a;
+  --syntax-keyword: #4dd0e1;
+  --syntax-type: #82aaff;
+  --syntax-number: #f78c6c;
+  --syntax-string: #c3e88d;
+  --syntax-comment: #5c6f91;
+  --syntax-title: #f7768e;
+  --syntax-variable: #e3ecff;
+  --syntax-operator: #89ddff;
+  --syntax-meta: #ffcb6b;
+  --syntax-deletion: #ff5874;
+  --syntax-addition: #c3e88d;
   --ring-line: rgba(77, 208, 225, 0.09);
   --ring-mark: rgba(227, 236, 255, 0.08);
   --nav-border: rgba(47, 63, 95, 0.68);
@@ -70,6 +92,17 @@
   --code-bg: #eee7d8;
   --code-panel: #efe7d5;
   --code-text: #8f3f20;
+  --syntax-keyword: #9b3156;
+  --syntax-type: #0b6f7e;
+  --syntax-number: #9a4f10;
+  --syntax-string: #2f7d32;
+  --syntax-comment: #8a806f;
+  --syntax-title: #6d4aa2;
+  --syntax-variable: #25334f;
+  --syntax-operator: #006d75;
+  --syntax-meta: #8a5a00;
+  --syntax-deletion: #b64b5b;
+  --syntax-addition: #2f7d32;
   --ring-line: rgba(31, 42, 68, 0.08);
   --ring-mark: rgba(31, 42, 68, 0.09);
   --nav-border: rgba(216, 205, 185, 0.78);
@@ -96,6 +129,17 @@
   --code-bg: #1b1627;
   --code-panel: #191424;
   --code-text: #ffd166;
+  --syntax-keyword: #ff7aa2;
+  --syntax-type: #82d6ff;
+  --syntax-number: #ffd166;
+  --syntax-string: #8cffc1;
+  --syntax-comment: #8d7ab3;
+  --syntax-title: #d7a6ff;
+  --syntax-variable: #fff0f6;
+  --syntax-operator: #67e8f9;
+  --syntax-meta: #ffb86c;
+  --syntax-deletion: #ff5f87;
+  --syntax-addition: #8cffc1;
   --ring-line: rgba(255, 240, 246, 0.08);
   --ring-mark: rgba(130, 214, 255, 0.1);
   --nav-border: rgba(93, 75, 117, 0.7);
@@ -121,6 +165,17 @@
   --code-bg: #0b110d;
   --code-panel: #0a100c;
   --code-text: #f2cc60;
+  --syntax-keyword: #7ee787;
+  --syntax-type: #39d0d8;
+  --syntax-number: #f2cc60;
+  --syntax-string: #b8f7a0;
+  --syntax-comment: #6e8f75;
+  --syntax-title: #d2a8ff;
+  --syntax-variable: #e6ffe9;
+  --syntax-operator: #56d364;
+  --syntax-meta: #ffdf7e;
+  --syntax-deletion: #ff7b72;
+  --syntax-addition: #7ee787;
   --ring-line: rgba(126, 231, 135, 0.08);
   --ring-mark: rgba(185, 217, 192, 0.08);
   --nav-border: rgba(49, 81, 58, 0.74);
@@ -1078,16 +1133,22 @@ a {
 }
 
 .post-content figure.highlight .keyword,
-.post-content figure.highlight .selector-tag,
-.post-content figure.highlight .built_in,
-.post-content figure.highlight .type,
 .post-content figure.highlight .literal,
 .post-content pre code .hljs-keyword,
-.post-content pre code .hljs-selector-tag,
+.post-content pre code .hljs-literal {
+  color: var(--syntax-keyword);
+  font-weight: 700;
+}
+
+.post-content figure.highlight .built_in,
+.post-content figure.highlight .type,
+.post-content figure.highlight .selector-tag,
+.post-content figure.highlight .class,
 .post-content pre code .hljs-built_in,
 .post-content pre code .hljs-type,
-.post-content pre code .hljs-literal {
-  color: #ff7aa2;
+.post-content pre code .hljs-selector-tag,
+.post-content pre code .hljs-class {
+  color: var(--syntax-type);
   font-weight: 700;
 }
 
@@ -1095,45 +1156,73 @@ a {
 .post-content figure.highlight .regexp,
 .post-content pre code .hljs-number,
 .post-content pre code .hljs-regexp {
-  color: #f6c177;
+  color: var(--syntax-number);
 }
 
 .post-content figure.highlight .string,
 .post-content figure.highlight .subst,
+.post-content figure.highlight .char,
 .post-content pre code .hljs-string,
-.post-content pre code .hljs-subst {
-  color: #9ece6a;
+.post-content pre code .hljs-subst,
+.post-content pre code .hljs-char {
+  color: var(--syntax-string);
 }
 
 .post-content figure.highlight .comment,
 .post-content figure.highlight .quote,
 .post-content pre code .hljs-comment,
 .post-content pre code .hljs-quote {
-  color: var(--text-muted);
+  color: var(--syntax-comment);
   font-style: italic;
 }
 
 .post-content figure.highlight .title,
 .post-content figure.highlight .function,
+.post-content figure.highlight .section,
 .post-content pre code .hljs-title,
-.post-content pre code .hljs-function {
-  color: #82d6ff;
+.post-content pre code .hljs-function,
+.post-content pre code .hljs-section {
+  color: var(--syntax-title);
+  font-weight: 700;
 }
 
 .post-content figure.highlight .params,
 .post-content figure.highlight .variable,
 .post-content figure.highlight .attr,
+.post-content figure.highlight .attribute,
+.post-content figure.highlight .property,
 .post-content pre code .hljs-params,
 .post-content pre code .hljs-variable,
-.post-content pre code .hljs-attr {
-  color: var(--text-silver);
+.post-content pre code .hljs-attr,
+.post-content pre code .hljs-attribute,
+.post-content pre code .hljs-property {
+  color: var(--syntax-variable);
+}
+
+.post-content figure.highlight .operator,
+.post-content figure.highlight .punctuation,
+.post-content pre code .hljs-operator,
+.post-content pre code .hljs-punctuation {
+  color: var(--syntax-operator);
 }
 
 .post-content figure.highlight .meta,
 .post-content figure.highlight .symbol,
+.post-content figure.highlight .template-tag,
 .post-content pre code .hljs-meta,
-.post-content pre code .hljs-symbol {
-  color: #bb9af7;
+.post-content pre code .hljs-symbol,
+.post-content pre code .hljs-template-tag {
+  color: var(--syntax-meta);
+}
+
+.post-content figure.highlight .deletion,
+.post-content pre code .hljs-deletion {
+  color: var(--syntax-deletion);
+}
+
+.post-content figure.highlight .addition,
+.post-content pre code .hljs-addition {
+  color: var(--syntax-addition);
 }
 
 .code-enhanced {
