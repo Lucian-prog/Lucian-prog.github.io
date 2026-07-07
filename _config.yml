@@ -86,6 +86,8 @@ lucian:
       url: /categories/
     - name: 标签
       url: /tags/
+    - name: 写作
+      url: /editor/
     - name: 关于
       url: /about/
     - name: 友链

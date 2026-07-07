@@ -1,0 +1,75 @@
+<section class="content-card editor-page reveal">
+  <header class="editor-header">
+    <div>
+      <p class="editor-kicker">Local Draft Console</p>
+      <h1>文章编辑器</h1>
+      <p>用于起草 Hexo Markdown 文章，内容只保存在当前浏览器中。</p>
+    </div>
+    <div class="editor-actions">
+      <button class="editor-button" type="button" data-editor-action="copy">复制 Markdown</button>
+      <button class="editor-button editor-button-primary" type="button" data-editor-action="download">下载 .md</button>
+    </div>
+  </header>
+
+  <div class="editor-shell">
+    <form class="editor-form" autocomplete="off">
+      <label>
+        <span>标题</span>
+        <input id="draftTitle" type="text" value="新的学习笔记">
+      </label>
+      <label>
+        <span>Slug / 文件名</span>
+        <input id="draftSlug" type="text" value="new-learning-note">
+      </label>
+      <label>
+        <span>分类</span>
+        <input id="draftCategories" type="text" value="Reading Notes, Digital Design">
+      </label>
+      <label>
+        <span>标签</span>
+        <input id="draftTags" type="text" value="digital-design, risc-v">
+      </label>
+      <label class="editor-wide">
+        <span>摘要</span>
+        <textarea id="draftExcerpt" rows="3">这是一篇新的学习笔记摘要，用于首页和文章列表展示。</textarea>
+      </label>
+      <label class="editor-wide">
+        <span>正文 Markdown</span>
+        <textarea id="draftBody" rows="18">## 问题背景
+
+这里记录学习动机、章节来源和核心问题。
+
+## 硬件结构
+
+- 信号流：
+- 时序关系：
+- 边界条件：
+
+```verilog
+module example (
+  input  wire clk,
+  input  wire rst_n
+);
+endmodule
+```
+
+## 复盘
+
+这里整理仿真结果、波形观察和后续问题。</textarea>
+      </label>
+    </form>
+
+    <aside class="editor-output">
+      <div class="editor-output-header">
+        <span>Markdown 输出</span>
+        <strong id="draftFilename">new-learning-note.md</strong>
+      </div>
+      <textarea id="draftMarkdown" rows="13" readonly></textarea>
+      <div class="editor-output-header">
+        <span>预览</span>
+        <strong id="draftStatus">已同步</strong>
+      </div>
+      <div class="editor-preview post-content" id="draftPreview"></div>
+    </aside>
+  </div>
+</section>

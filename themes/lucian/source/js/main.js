@@ -6,6 +6,7 @@ const backToTop = document.querySelector('.back-to-top');
 const themeToggle = document.querySelector('.theme-toggle');
 const themeMenu = document.querySelector('.theme-menu');
 const themeButtons = document.querySelectorAll('[data-theme-choice]');
+const editorPage = document.querySelector('.editor-page');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const siteFeatures = window.LUCIAN_FEATURES || {};
 const themeKey = 'lucian-color-theme';
@@ -95,6 +96,174 @@ if (themeToggle && themeMenu) {
       themeToggle.setAttribute('aria-expanded', 'false');
     }
   });
+}
+
+const escapeHtml = (value) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
+const slugifyDraft = (value) => {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || 'untitled-note';
+};
+
+const splitDraftList = (value) => value
+  .split(',')
+  .map((item) => item.trim())
+  .filter(Boolean);
+
+const formatYamlList = (items) => {
+  if (!items.length) return '  - Notes';
+  return items.map((item) => `  - ${item}`).join('\n');
+};
+
+const quoteYaml = (value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+
+const renderDraftMarkdown = (markdown) => {
+  const lines = markdown.split('\n');
+  const html = [];
+  let inCode = false;
+  let inList = false;
+  let paragraph = [];
+
+  const flushParagraph = () => {
+    if (paragraph.length) {
+      html.push(`<p>${escapeHtml(paragraph.join(' '))}</p>`);
+      paragraph = [];
+    }
+  };
+
+  const closeList = () => {
+    if (inList) {
+      html.push('</ul>');
+      inList = false;
+    }
+  };
+
+  lines.forEach((line) => {
+    if (line.startsWith('```')) {
+      flushParagraph();
+      closeList();
+      if (inCode) {
+        html.push('</code></pre>');
+      } else {
+        html.push('<pre><code>');
+      }
+      inCode = !inCode;
+      return;
+    }
+
+    if (inCode) {
+      html.push(`${escapeHtml(line)}\n`);
+      return;
+    }
+
+    if (!line.trim()) {
+      flushParagraph();
+      closeList();
+      return;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      flushParagraph();
+      closeList();
+      const level = heading[1].length;
+      html.push(`<h${level}>${escapeHtml(heading[2])}</h${level}>`);
+      return;
+    }
+
+    const listItem = line.match(/^-\s+(.+)$/);
+    if (listItem) {
+      flushParagraph();
+      if (!inList) {
+        html.push('<ul>');
+        inList = true;
+      }
+      html.push(`<li>${escapeHtml(listItem[1])}</li>`);
+      return;
+    }
+
+    paragraph.push(line.trim());
+  });
+
+  flushParagraph();
+  closeList();
+
+  if (inCode) {
+    html.push('</code></pre>');
+  }
+
+  return html.join('\n');
+};
+
+if (editorPage) {
+  const titleInput = document.getElementById('draftTitle');
+  const slugInput = document.getElementById('draftSlug');
+  const categoriesInput = document.getElementById('draftCategories');
+  const tagsInput = document.getElementById('draftTags');
+  const excerptInput = document.getElementById('draftExcerpt');
+  const bodyInput = document.getElementById('draftBody');
+  const markdownOutput = document.getElementById('draftMarkdown');
+  const preview = document.getElementById('draftPreview');
+  const filename = document.getElementById('draftFilename');
+  const status = document.getElementById('draftStatus');
+  const copyButton = document.querySelector('[data-editor-action="copy"]');
+  const downloadButton = document.querySelector('[data-editor-action="download"]');
+
+  const syncDraft = () => {
+    const title = titleInput.value.trim() || '未命名文章';
+    const slug = slugifyDraft(slugInput.value || title);
+    const categories = splitDraftList(categoriesInput.value);
+    const tags = splitDraftList(tagsInput.value);
+    const excerpt = excerptInput.value.trim();
+    const body = bodyInput.value.trimEnd();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const markdown = `---\ntitle: ${quoteYaml(title)}\ndate: ${today}\ncategories:\n${formatYamlList(categories)}\ntags:\n${formatYamlList(tags)}\nexcerpt: ${quoteYaml(excerpt)}\n---\n\n${body}\n`;
+
+    slugInput.value = slug;
+    filename.textContent = `${slug}.md`;
+    markdownOutput.value = markdown;
+    preview.innerHTML = renderDraftMarkdown(body);
+    status.textContent = '已同步';
+  };
+
+  [titleInput, slugInput, categoriesInput, tagsInput, excerptInput, bodyInput].forEach((field) => {
+    field.addEventListener('input', syncDraft);
+  });
+
+  copyButton?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(markdownOutput.value);
+      status.textContent = '已复制';
+    } catch (error) {
+      markdownOutput.select();
+      document.execCommand('copy');
+      status.textContent = '已复制';
+    }
+  });
+
+  downloadButton?.addEventListener('click', () => {
+    const blob = new Blob([markdownOutput.value], { type: 'text/markdown;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename.textContent;
+    link.click();
+    URL.revokeObjectURL(link.href);
+    status.textContent = '已下载';
+  });
+
+  syncDraft();
 }
 
 if (ambientLayer && !reduceMotion) {
