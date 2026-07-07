@@ -8,6 +8,17 @@
   <link rel="icon" href="/images/avatar.png" type="image/png">
   <script>
     (() => {
+      const themeKey = 'lucian-color-theme';
+      const fallbackTheme = 'scarlet';
+      try {
+        document.documentElement.dataset.theme = localStorage.getItem(themeKey) || fallbackTheme;
+      } catch (error) {
+        document.documentElement.dataset.theme = fallbackTheme;
+      }
+    })();
+  </script>
+  <script>
+    (() => {
       const resetKey = 'lucian-sw-cache-reset-v2';
       const clearLegacyCache = async () => {
         try {
@@ -50,11 +61,33 @@
 
   <nav class="top-nav">
     <a class="nav-logo" href="/"><%= config.lucian.hero.logo %></a>
-    <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">☰</button>
-    <div class="nav-links">
-      <% config.lucian.nav.forEach((item) => { %>
-        <a href="<%= item.url %>"><%= item.name %></a>
-      <% }) %>
+    <div class="nav-actions">
+      <div class="theme-switcher">
+        <button class="theme-toggle" type="button" aria-label="切换主题配色" aria-expanded="false">◐</button>
+        <div class="theme-menu" role="menu" aria-label="主题配色">
+          <button type="button" data-theme-choice="scarlet" role="menuitem">
+            <span class="theme-swatch theme-swatch-scarlet"></span>Scarlet
+          </button>
+          <button type="button" data-theme-choice="midnight" role="menuitem">
+            <span class="theme-swatch theme-swatch-midnight"></span>Midnight
+          </button>
+          <button type="button" data-theme-choice="paper" role="menuitem">
+            <span class="theme-swatch theme-swatch-paper"></span>Paper
+          </button>
+          <button type="button" data-theme-choice="pixel" role="menuitem">
+            <span class="theme-swatch theme-swatch-pixel"></span>Pixel
+          </button>
+          <button type="button" data-theme-choice="terminal" role="menuitem">
+            <span class="theme-swatch theme-swatch-terminal"></span>Terminal
+          </button>
+        </div>
+      </div>
+      <button class="nav-toggle" aria-label="打开导航" aria-expanded="false">☰</button>
+      <div class="nav-links">
+        <% config.lucian.nav.forEach((item) => { %>
+          <a href="<%= item.url %>"><%= item.name %></a>
+        <% }) %>
+      </div>
     </div>
   </nav>
 

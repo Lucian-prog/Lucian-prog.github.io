@@ -3,8 +3,12 @@ const links = document.querySelector('.nav-links');
 const loader = document.querySelector('.site-loader');
 const ambientLayer = document.querySelector('.ambient-layer');
 const backToTop = document.querySelector('.back-to-top');
+const themeToggle = document.querySelector('.theme-toggle');
+const themeMenu = document.querySelector('.theme-menu');
+const themeButtons = document.querySelectorAll('[data-theme-choice]');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const siteFeatures = window.LUCIAN_FEATURES || {};
+const themeKey = 'lucian-color-theme';
 
 document.body.classList.add('is-loading');
 
@@ -34,6 +38,62 @@ if (toggle && links) {
   toggle.addEventListener('click', () => {
     const isOpen = links.classList.toggle('is-open');
     toggle.setAttribute('aria-expanded', String(isOpen));
+  });
+}
+
+const setColorTheme = (theme) => {
+  document.documentElement.dataset.theme = theme;
+
+  try {
+    localStorage.setItem(themeKey, theme);
+  } catch (error) {
+    // Theme switching still works for the current page when storage is unavailable.
+  }
+
+  themeButtons.forEach((button) => {
+    const isActive = button.dataset.themeChoice === theme;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-current', isActive ? 'true' : 'false');
+  });
+};
+
+if (themeButtons.length > 0) {
+  let initialTheme = document.documentElement.dataset.theme || 'scarlet';
+
+  try {
+    initialTheme = localStorage.getItem(themeKey) || initialTheme;
+  } catch (error) {}
+
+  setColorTheme(initialTheme);
+}
+
+if (themeToggle && themeMenu) {
+  themeToggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const isOpen = themeMenu.classList.toggle('is-open');
+    themeToggle.setAttribute('aria-expanded', String(isOpen));
+  });
+
+  themeButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      setColorTheme(button.dataset.themeChoice);
+      themeMenu.classList.remove('is-open');
+      themeToggle.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!themeMenu.contains(event.target) && event.target !== themeToggle) {
+      themeMenu.classList.remove('is-open');
+      themeToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      themeMenu.classList.remove('is-open');
+      themeToggle.setAttribute('aria-expanded', 'false');
+    }
   });
 }
 
