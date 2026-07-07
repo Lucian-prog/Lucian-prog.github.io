@@ -1,13 +1,14 @@
 ---
-title: "从 Verilog 到 SystemVerilog：读《数字设计和计算机体系结构》第 4 章的一点笔记"
-date: 2026-07-07
+title: "从 Verilog 到 SystemVerilog：第 4 章硬件描述语言笔记"
+date: 2026-07-07 23:22:08
 categories:
-  - Reading Notes
-  - Digital Design
+  - "Reading Notes"
 tags:
-  - digital-design
-  - risc-v
-excerpt: "最近在读《数字设计和计算机体系结构（RISC-V 版）》第 4 章“硬件描述语言”。这一章主要讲 SystemVerilog 和 VHDL 如何描述组合逻辑、时序逻辑、结构建模和有限状态机。因为我平时更多使用 Verilog 写 FPGA 练习模块，所以这篇笔记主要记录我从 Verilog 过渡到 SystemVerilog 时最需要关注的几个点。Verilog的具体语法不过多赘述，记录一下它与SystemVerilog的几个不同点"
+  - "digital-design"
+  - "systemverilog"
+  - "verilog"
+  - "computer-architecture"
+excerpt: "记录从 Verilog 过渡到 SystemVerilog 时需要关注的 logic、always_ff、always_comb、赋值规则和枚举状态机。"
 ---
 
 ## 从 `reg/wire` 到 `logic`

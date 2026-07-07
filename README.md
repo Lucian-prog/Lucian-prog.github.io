@@ -83,3 +83,19 @@ git push
 
 ## 易错点
 ```
+
+RTL 代码块可以使用：
+
+````markdown
+```systemverilog
+always_ff @(posedge clk_i or negedge rst_n_i) begin
+  if (!rst_n_i) begin
+    q_o <= '0;
+  end else begin
+    q_o <= d_i;
+  end
+end
+```
+````
+
+站点会在构建时把 `systemverilog` / `sv` 代码块交给 Verilog 高亮器处理。

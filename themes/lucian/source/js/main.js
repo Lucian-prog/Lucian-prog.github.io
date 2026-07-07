@@ -758,6 +758,12 @@ const languageFromHighlight = (element) => {
   if (languageClass) return languageClass.replace('language-', '');
 
   const highlightClass = classes.find((name) => name !== 'highlight' && name !== 'code-enhanced');
+  if (highlightClass === 'verilog') {
+    const code = plainTextFromHighlight(element);
+    if (/\b(always_ff|always_comb|always_latch|logic|typedef\s+enum|unique\s+case|interface|modport)\b/.test(code)) {
+      return 'systemverilog';
+    }
+  }
   if (highlightClass) return highlightClass;
 
   return 'code';
