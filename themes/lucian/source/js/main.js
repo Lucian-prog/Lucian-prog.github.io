@@ -207,6 +207,8 @@ const renderDraftMarkdown = (markdown) => {
 };
 
 if (editorPage) {
+  const draftStorageKey = 'lucian-editor-drafts-v1';
+  const activeDraftKey = 'lucian-editor-active-draft-v1';
   const titleInput = document.getElementById('draftTitle');
   const slugInput = document.getElementById('draftSlug');
   const categoriesInput = document.getElementById('draftCategories');
@@ -217,10 +219,72 @@ if (editorPage) {
   const preview = document.getElementById('draftPreview');
   const filename = document.getElementById('draftFilename');
   const status = document.getElementById('draftStatus');
+  const draftList = document.getElementById('draftList');
+  const draftCount = document.getElementById('draftCount');
+  const newButtons = document.querySelectorAll('[data-editor-action="new"]');
+  const saveButton = document.querySelector('[data-editor-action="save"]');
+  const deleteButton = document.querySelector('[data-editor-action="delete"]');
   const copyButton = document.querySelector('[data-editor-action="copy"]');
   const downloadButton = document.querySelector('[data-editor-action="download"]');
+  let drafts = [];
+  let activeDraftId = null;
+  let saveTimer = null;
 
-  const syncDraft = () => {
+  const defaultDraftBody = bodyInput.value;
+
+  const createDraft = (overrides = {}) => {
+    const now = new Date().toISOString();
+    const id = `draft-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+    return {
+      id,
+      title: '新的学习笔记',
+      slug: 'new-learning-note',
+      categories: 'Reading Notes, Digital Design',
+      tags: 'digital-design, risc-v',
+      excerpt: '这是一篇新的学习笔记摘要，用于首页和文章列表展示。',
+      body: defaultDraftBody,
+      createdAt: now,
+      updatedAt: now,
+      ...overrides
+    };
+  };
+
+  const readDrafts = () => {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(draftStorageKey) || '[]');
+      return Array.isArray(parsed) ? parsed.filter((draft) => draft && draft.id) : [];
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const writeDrafts = () => {
+    try {
+      localStorage.setItem(draftStorageKey, JSON.stringify(drafts));
+      if (activeDraftId) {
+        localStorage.setItem(activeDraftKey, activeDraftId);
+      }
+    } catch (error) {
+      status.textContent = '本地存储不可用';
+    }
+  };
+
+  const findActiveDraft = () => drafts.find((draft) => draft.id === activeDraftId);
+
+  const formatDraftTime = (value) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '未知时间';
+
+    return date.toLocaleString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const buildMarkdown = () => {
     const title = titleInput.value.trim() || '未命名文章';
     const slug = slugifyDraft(slugInput.value || title);
     const categories = splitDraftList(categoriesInput.value);
@@ -229,20 +293,159 @@ if (editorPage) {
     const body = bodyInput.value.trimEnd();
     const today = new Date().toISOString().slice(0, 10);
 
-    const markdown = `---\ntitle: ${quoteYaml(title)}\ndate: ${today}\ncategories:\n${formatYamlList(categories)}\ntags:\n${formatYamlList(tags)}\nexcerpt: ${quoteYaml(excerpt)}\n---\n\n${body}\n`;
-
-    slugInput.value = slug;
-    filename.textContent = `${slug}.md`;
-    markdownOutput.value = markdown;
-    preview.innerHTML = renderDraftMarkdown(body);
-    status.textContent = '已同步';
+    return {
+      title,
+      slug,
+      categories,
+      tags,
+      excerpt,
+      body,
+      markdown: `---\ntitle: ${quoteYaml(title)}\ndate: ${today}\ncategories:\n${formatYamlList(categories)}\ntags:\n${formatYamlList(tags)}\nexcerpt: ${quoteYaml(excerpt)}\n---\n\n${body}\n`
+    };
   };
 
+  const renderDraftList = () => {
+    draftCount.textContent = String(drafts.length);
+    draftList.innerHTML = '';
+
+    drafts
+      .slice()
+      .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+      .forEach((draft) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'draft-card';
+        button.classList.toggle('is-active', draft.id === activeDraftId);
+        button.dataset.draftId = draft.id;
+        button.innerHTML = `
+          <span class="draft-card-title">${escapeHtml(draft.title || '未命名文章')}</span>
+          <span class="draft-card-meta">${escapeHtml(formatDraftTime(draft.updatedAt))}</span>
+          <span class="draft-card-tags">${escapeHtml([draft.categories, draft.tags].filter(Boolean).join(' · ') || '未分类')}</span>
+        `;
+        button.addEventListener('click', () => {
+          saveCurrentDraft('已自动保存');
+          loadDraft(draft.id);
+        });
+        draftList.appendChild(button);
+      });
+  };
+
+  const syncDraft = (message = '已同步') => {
+    const draftData = buildMarkdown();
+
+    slugInput.value = draftData.slug;
+    filename.textContent = `${draftData.slug}.md`;
+    markdownOutput.value = draftData.markdown;
+    preview.innerHTML = renderDraftMarkdown(draftData.body);
+    status.textContent = message;
+  };
+
+  const applyDraftToForm = (draft) => {
+    titleInput.value = draft.title || '未命名文章';
+    slugInput.value = draft.slug || slugifyDraft(draft.title || 'untitled-note');
+    categoriesInput.value = draft.categories || '';
+    tagsInput.value = draft.tags || '';
+    excerptInput.value = draft.excerpt || '';
+    bodyInput.value = draft.body || '';
+    syncDraft('已载入');
+  };
+
+  const saveCurrentDraft = (message = '已保存') => {
+    const activeDraft = findActiveDraft();
+    if (!activeDraft) return;
+
+    const draftData = buildMarkdown();
+    activeDraft.title = draftData.title;
+    activeDraft.slug = draftData.slug;
+    activeDraft.categories = categoriesInput.value.trim();
+    activeDraft.tags = tagsInput.value.trim();
+    activeDraft.excerpt = draftData.excerpt;
+    activeDraft.body = draftData.body;
+    activeDraft.updatedAt = new Date().toISOString();
+    writeDrafts();
+    syncDraft(`${message} ${formatDraftTime(activeDraft.updatedAt)}`);
+    renderDraftList();
+  };
+
+  const scheduleSave = () => {
+    syncDraft('未保存');
+    window.clearTimeout(saveTimer);
+    saveTimer = window.setTimeout(() => {
+      saveCurrentDraft('自动保存于');
+    }, 700);
+  };
+
+  const loadDraft = (id) => {
+    const draft = drafts.find((item) => item.id === id);
+    if (!draft) return;
+
+    activeDraftId = draft.id;
+    try {
+      localStorage.setItem(activeDraftKey, activeDraftId);
+    } catch (error) {}
+    applyDraftToForm(draft);
+    renderDraftList();
+  };
+
+  const addDraft = () => {
+    saveCurrentDraft('已自动保存');
+    const newDraft = createDraft({
+      title: '新的学习笔记',
+      slug: `new-learning-note-${drafts.length + 1}`
+    });
+    drafts.push(newDraft);
+    writeDrafts();
+    loadDraft(newDraft.id);
+  };
+
+  const deleteActiveDraft = () => {
+    const activeDraft = findActiveDraft();
+    if (!activeDraft) return;
+
+    const confirmed = window.confirm(`删除草稿「${activeDraft.title || '未命名文章'}」？此操作只会删除浏览器本地草稿。`);
+    if (!confirmed) return;
+
+    drafts = drafts.filter((draft) => draft.id !== activeDraft.id);
+    if (!drafts.length) {
+      drafts.push(createDraft());
+    }
+
+    activeDraftId = drafts.slice().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0].id;
+    writeDrafts();
+    loadDraft(activeDraftId);
+    status.textContent = '已删除';
+  };
+
+  drafts = readDrafts();
+  if (!drafts.length) {
+    drafts.push(createDraft());
+  }
+
+  try {
+    activeDraftId = localStorage.getItem(activeDraftKey);
+  } catch (error) {}
+
+  if (!drafts.some((draft) => draft.id === activeDraftId)) {
+    activeDraftId = drafts.slice().sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))[0].id;
+  }
+
+  writeDrafts();
+  loadDraft(activeDraftId);
+
   [titleInput, slugInput, categoriesInput, tagsInput, excerptInput, bodyInput].forEach((field) => {
-    field.addEventListener('input', syncDraft);
+    field.addEventListener('input', scheduleSave);
   });
 
+  newButtons.forEach((button) => {
+    button.addEventListener('click', addDraft);
+  });
+
+  saveButton?.addEventListener('click', () => saveCurrentDraft('已保存'));
+  deleteButton?.addEventListener('click', deleteActiveDraft);
+
   copyButton?.addEventListener('click', async () => {
+    saveCurrentDraft('已保存');
+
     try {
       await navigator.clipboard.writeText(markdownOutput.value);
       status.textContent = '已复制';
@@ -254,6 +457,8 @@ if (editorPage) {
   });
 
   downloadButton?.addEventListener('click', () => {
+    saveCurrentDraft('已保存');
+
     const blob = new Blob([markdownOutput.value], { type: 'text/markdown;charset=utf-8' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -262,8 +467,6 @@ if (editorPage) {
     URL.revokeObjectURL(link.href);
     status.textContent = '已下载';
   });
-
-  syncDraft();
 }
 
 if (ambientLayer && !reduceMotion) {
