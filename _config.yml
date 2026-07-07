@@ -1,0 +1,139 @@
+# Hexo Configuration
+
+# Site
+title: Lucian's Digital IC Notes
+subtitle: Digital Design · Computer Architecture · RISC-V · Hardware Engineering
+description: 记录数字 IC、计算机体系结构与硬件工程学习过程。
+keywords:
+  - Digital IC
+  - Computer Architecture
+  - RISC-V
+  - RTL
+  - FPGA
+author: Lucian
+language: zh-CN
+timezone: Asia/Shanghai
+
+# URL
+url: https://Lucian-prog.github.io
+permalink: posts/:title/
+pretty_urls:
+  trailing_index: true
+  trailing_html: false
+
+# Directory
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :title.md
+default_layout: post
+titlecase: false
+external_link:
+  enable: true
+  field: site
+  exclude: ''
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+syntax_highlighter: highlight.js
+highlight:
+  line_number: true
+  auto_detect: false
+  tab_replace: '  '
+  wrap: true
+  hljs: false
+
+# Home page
+index_generator:
+  path: ''
+  per_page: 10
+  order_by: -date
+
+# Category & Tag
+default_category: Notes
+category_map:
+tag_map:
+
+# Date / Time
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+updated_option: mtime
+
+# Pagination
+per_page: 10
+pagination_dir: page
+
+# Extensions
+theme: lucian
+
+# Theme data consumed by themes/lucian
+lucian:
+  nav:
+    - name: 首页
+      url: /
+    - name: 归档
+      url: /archives/
+    - name: 分类
+      url: /categories/
+    - name: 标签
+      url: /tags/
+    - name: 关于
+      url: /about/
+    - name: 友链
+      url: /friend/
+    - name: GitHub
+      url: https://github.com/Lucian-prog
+  hero:
+    logo: LUCIAN_NOTES
+    avatar: /images/avatar.png
+    title: Lucian's Digital IC Notes
+    subtitle: Digital Design · Computer Architecture · RISC-V · Hardware Engineering
+    description: 记录数字 IC、计算机体系结构与硬件工程学习过程
+  main_thread:
+    title: 《数字设计和计算机体系结构：RISC-V 版》阅读笔记
+    progress: 15
+    recent: 数字抽象与二进制表示
+    next: 组合逻辑与布尔代数
+  topics:
+    - title: Digital Design
+      desc: 数字逻辑、组合/时序电路与基础门级设计笔记。
+      url: /categories/Reading-Notes/
+    - title: Comp Arch
+      desc: 指令集、流水线、Cache 层次结构与性能分析。
+      url: /tags/computer-architecture/
+    - title: RISC-V Notes
+      desc: RISC-V 指令格式、数据通路与微架构学习记录。
+      url: /tags/risc-v/
+    - title: RTL Labs
+      desc: Verilog/SystemVerilog 模块级编码、仿真与波形复盘。
+      url: /categories/RTL-Labs/
+    - title: FPGA Projects
+      desc: 板级验证、接口模块、时序约束与上板调试记录。
+      url: /categories/Projects/
+    - title: Toolchains
+      desc: Linux、Git、Vivado、仿真器与 EDA 工程环境配置。
+      url: /categories/Toolchains/
+  projects:
+    - title: FPGA 学习仓库
+      url: https://github.com/Lucian-prog/FPGA
+    - title: APB Slave IP
+      url: /tags/apb/
+    - title: Async FIFO
+      url: /tags/fifo/
+    - title: UART / SPI / I2C
+      url: /tags/interface/
+    - title: 安路 FPGA 音频项目复盘
+      url: /tags/anlogic/
+
+# Deployment is handled by GitHub Actions.
+deploy:
+  type:

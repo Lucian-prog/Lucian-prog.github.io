@@ -1,0 +1,81 @@
+<%
+  const posts = site.posts.sort('-date');
+  const latestPosts = posts.limit(5);
+  const postCount = posts.length;
+  const categoryCount = site.categories.length;
+  const tagCount = site.tags.length;
+%>
+
+<header class="portal-card">
+  <div class="portal-mark" aria-hidden="true">⚙</div>
+  <div class="avatar-container">
+    <img class="avatar" src="<%= config.lucian.hero.avatar %>" alt="Lucian avatar">
+  </div>
+  <h1 class="site-title"><%= config.lucian.hero.title %></h1>
+  <p class="site-desc-en"><%= config.lucian.hero.subtitle %></p>
+  <p class="site-desc-cn"><%= config.lucian.hero.description %></p>
+
+  <div class="stats-group">
+    <div class="stat-item"><span class="stat-num"><%= postCount %></span><span class="stat-label">Articles</span></div>
+    <div class="stat-item"><span class="stat-num"><%= categoryCount %></span><span class="stat-label">Categories</span></div>
+    <div class="stat-item"><span class="stat-num"><%= tagCount %></span><span class="stat-label">Tags</span></div>
+  </div>
+</header>
+
+<h2 class="section-title">Knowledge Matrix</h2>
+<section class="topics-grid">
+  <% config.lucian.topics.forEach((topic) => { %>
+    <a class="topic-card" href="<%= topic.url %>">
+      <div class="topic-title"><%= topic.title %></div>
+      <div class="topic-desc"><%= topic.desc %></div>
+    </a>
+  <% }) %>
+</section>
+
+<h2 class="section-title">Current Main Thread</h2>
+<section class="learning-thread">
+  <div class="thread-header">
+    <div class="thread-title"><%= config.lucian.main_thread.title %></div>
+    <div class="thread-status">Progress: <%= config.lucian.main_thread.progress %>%</div>
+  </div>
+  <div class="progress-track" aria-label="reading progress">
+    <div class="progress-fill" style="width: <%= config.lucian.main_thread.progress %>%"></div>
+  </div>
+  <div class="thread-details">
+    <div class="detail-tag"><span>近期更新</span><%= config.lucian.main_thread.recent %></div>
+    <div class="detail-tag"><span>Next Step</span><%= config.lucian.main_thread.next %></div>
+  </div>
+</section>
+
+<h2 class="section-title">Latest Notes</h2>
+<section class="article-list">
+  <% latestPosts.forEach((post) => { %>
+    <article class="article-card">
+      <div class="article-meta">
+        <span><%= date(post.date, 'YYYY-MM-DD') %></span>
+        <% if (post.categories && post.categories.length) { %>
+          <span><%= post.categories.map((cat) => cat.name).join(' / ') %></span>
+        <% } %>
+        <span><%= wordcount(post.content || '') %> Words</span>
+        <span><%= min2read(post.content || '') %> Min Read</span>
+      </div>
+      <h3 class="article-title"><a href="<%- url_for(post.path) %>"><%= post.title %></a></h3>
+      <p class="article-excerpt"><%= strip_html(post.excerpt || post.content).replace(/\s+/g, ' ').slice(0, 180) %>...</p>
+      <div class="article-footer">
+        <div class="article-tags">
+          <% if (post.tags) { post.tags.limit(4).forEach((tag) => { %>
+            <a href="<%- url_for(tag.path) %>"><%= tag.name %></a>
+          <% }) } %>
+        </div>
+        <a href="<%- url_for(post.path) %>" class="read-more">Read More »</a>
+      </div>
+    </article>
+  <% }) %>
+</section>
+
+<h2 class="section-title">Projects & Labs</h2>
+<section class="projects-grid">
+  <% config.lucian.projects.forEach((project) => { %>
+    <a class="project-chip" href="<%= project.url %>"><%= project.title %></a>
+  <% }) %>
+</section>

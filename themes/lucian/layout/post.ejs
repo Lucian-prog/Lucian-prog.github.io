@@ -1,0 +1,23 @@
+<article class="content-card post-card">
+  <header class="post-header">
+    <div class="article-meta">
+      <span><%= date(page.date, 'YYYY-MM-DD') %></span>
+      <% if (page.categories && page.categories.length) { %>
+        <span><%= page.categories.map((cat) => cat.name).join(' / ') %></span>
+      <% } %>
+      <span><%= wordcount(page.content || '') %> Words</span>
+      <span><%= min2read(page.content || '') %> Min Read</span>
+    </div>
+    <h1><%= page.title %></h1>
+    <% if (page.tags && page.tags.length) { %>
+      <div class="article-tags post-tags">
+        <% page.tags.forEach((tag) => { %>
+          <a href="<%- url_for(tag.path) %>"><%= tag.name %></a>
+        <% }) %>
+      </div>
+    <% } %>
+  </header>
+  <div class="post-content">
+    <%- page.content %>
+  </div>
+</article>

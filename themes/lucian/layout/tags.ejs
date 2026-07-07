@@ -1,0 +1,11 @@
+<section class="content-card list-page">
+  <h1>标签</h1>
+  <div class="taxonomy-grid">
+    <% site.tags.sort('name').forEach((tag) => { %>
+      <a class="taxonomy-chip" href="<%- url_for(tag.path) %>">
+        <span><%= tag.name %></span>
+        <strong><%= tag.length %></strong>
+      </a>
+    <% }) %>
+  </div>
+</section>
