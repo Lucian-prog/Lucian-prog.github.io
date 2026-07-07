@@ -486,6 +486,213 @@ if (editorPage) {
   }
 }
 
+const featureEnabled = (name) => siteFeatures.features?.[name] !== false;
+const postContent = document.querySelector('.post-content');
+
+const slugifyHeading = (value) => {
+  const slug = value
+    .trim()
+    .toLowerCase()
+    .replace(/['"]/g, '')
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return slug || `section-${Math.random().toString(16).slice(2)}`;
+};
+
+if (postContent && !featureEnabled('toc')) {
+  document.getElementById('postTocCard')?.classList.add('is-empty');
+}
+
+if (postContent && featureEnabled('toc')) {
+  const tocCard = document.getElementById('postTocCard');
+  const toc = document.getElementById('postToc');
+  const headings = Array.from(postContent.querySelectorAll('h2, h3'));
+
+  if (tocCard && toc && headings.length) {
+    const usedIds = new Set();
+
+    headings.forEach((heading, index) => {
+      if (!heading.id) {
+        heading.id = slugifyHeading(heading.textContent || `section-${index + 1}`);
+      }
+
+      while (usedIds.has(heading.id)) {
+        heading.id = `${heading.id}-${index + 1}`;
+      }
+
+      usedIds.add(heading.id);
+
+      const link = document.createElement('a');
+      link.className = `post-toc-link is-${heading.tagName.toLowerCase()}`;
+      link.href = `#${heading.id}`;
+      link.textContent = heading.textContent.trim();
+      link.addEventListener('click', () => {
+        toc.querySelectorAll('.post-toc-link').forEach((item) => item.classList.remove('is-active'));
+        link.classList.add('is-active');
+      });
+      toc.appendChild(link);
+    });
+
+    if ('IntersectionObserver' in window) {
+      const tocLinks = new Map(Array.from(toc.querySelectorAll('.post-toc-link')).map((link) => [
+        decodeURIComponent(link.hash.slice(1)),
+        link
+      ]));
+
+      const headingObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          toc.querySelectorAll('.post-toc-link').forEach((link) => link.classList.remove('is-active'));
+          tocLinks.get(entry.target.id)?.classList.add('is-active');
+        });
+      }, { rootMargin: '-20% 0px -68% 0px', threshold: 0.01 });
+
+      headings.forEach((heading) => headingObserver.observe(heading));
+    }
+
+    toc.querySelector('.post-toc-link')?.classList.add('is-active');
+  } else {
+    tocCard?.classList.add('is-empty');
+  }
+}
+
+const plainTextFromHighlight = (figure) => {
+  const codeLines = Array.from(figure.querySelectorAll('td.code .line'));
+  if (codeLines.length) {
+    return codeLines.map((line) => line.textContent).join('\n');
+  }
+
+  return figure.querySelector('td.code pre, pre code, pre')?.textContent || '';
+};
+
+const languageFromHighlight = (element) => {
+  const classes = Array.from(element.classList || []);
+  const languageClass = classes.find((name) => name.startsWith('language-'));
+  if (languageClass) return languageClass.replace('language-', '');
+
+  const highlightClass = classes.find((name) => name !== 'highlight' && name !== 'code-enhanced');
+  if (highlightClass) return highlightClass;
+
+  return 'code';
+};
+
+const copyText = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    textarea.remove();
+    return copied;
+  }
+};
+
+if (postContent && featureEnabled('code_tools')) {
+  const figures = Array.from(postContent.querySelectorAll('figure.highlight'));
+  const plainBlocks = Array.from(postContent.querySelectorAll('pre > code'))
+    .map((code) => code.closest('pre'))
+    .filter((pre) => pre && !pre.closest('figure.highlight'));
+
+  figures.forEach((figure) => {
+    if (figure.dataset.enhanced === 'true') return;
+    figure.dataset.enhanced = 'true';
+    figure.classList.add('code-enhanced');
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'code-toolbar';
+    toolbar.innerHTML = `<span class="code-language">${escapeHtml(languageFromHighlight(figure))}</span><button class="code-copy" type="button">Copy</button>`;
+    figure.prepend(toolbar);
+
+    const button = toolbar.querySelector('.code-copy');
+    button.addEventListener('click', async () => {
+      const copied = await copyText(plainTextFromHighlight(figure));
+      button.textContent = copied ? 'Copied' : 'Failed';
+      button.classList.toggle('is-copied', copied);
+      window.setTimeout(() => {
+        button.textContent = 'Copy';
+        button.classList.remove('is-copied');
+      }, 1200);
+    });
+  });
+
+  plainBlocks.forEach((pre) => {
+    if (pre.dataset.enhanced === 'true') return;
+    pre.dataset.enhanced = 'true';
+    pre.classList.add('code-enhanced');
+
+    const code = pre.querySelector('code');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'plain-code-wrap';
+    const toolbar = document.createElement('div');
+    toolbar.className = 'code-toolbar';
+    toolbar.innerHTML = `<span class="code-language">${escapeHtml(languageFromHighlight(code || pre))}</span><button class="code-copy" type="button">Copy</button>`;
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(toolbar);
+    wrapper.appendChild(pre);
+
+    const button = toolbar.querySelector('.code-copy');
+    button.addEventListener('click', async () => {
+      const copied = await copyText(code?.textContent || pre.textContent || '');
+      button.textContent = copied ? 'Copied' : 'Failed';
+      button.classList.toggle('is-copied', copied);
+      window.setTimeout(() => {
+        button.textContent = 'Copy';
+        button.classList.remove('is-copied');
+      }, 1200);
+    });
+  });
+}
+
+if (postContent && featureEnabled('mermaid')) {
+  const mermaidFigures = Array.from(postContent.querySelectorAll('figure.highlight.mermaid'));
+  const mermaidPreBlocks = Array.from(postContent.querySelectorAll('pre > code.language-mermaid'))
+    .map((code) => code.closest('pre'))
+    .filter(Boolean);
+  const mermaidSources = [...mermaidFigures, ...mermaidPreBlocks];
+
+  if (mermaidSources.length) {
+    const mermaidTheme = document.documentElement.dataset.theme === 'paper' ? 'default' : 'dark';
+
+    loadScript(siteFeatures.features?.mermaid_script || 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js')
+      .then(async () => {
+        if (!window.mermaid) return;
+
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: mermaidTheme,
+          securityLevel: 'strict'
+        });
+
+        for (const [index, source] of mermaidSources.entries()) {
+          const graphDefinition = source.matches('figure.highlight')
+            ? plainTextFromHighlight(source)
+            : source.querySelector('code')?.textContent || source.textContent || '';
+          const graph = document.createElement('div');
+          graph.className = 'mermaid-block';
+
+          try {
+            const result = await window.mermaid.render(`mermaid-${Date.now()}-${index}`, graphDefinition);
+            graph.innerHTML = result.svg;
+            source.replaceWith(graph);
+          } catch (error) {
+            const message = document.createElement('div');
+            message.className = 'mermaid-error';
+            message.textContent = 'Mermaid 渲染失败，已保留原始代码。';
+            source.after(message);
+          }
+        }
+      })
+      .catch(() => {});
+  }
+}
+
 if (ambientLayer && !reduceMotion) {
   const dotCount = window.matchMedia('(max-width: 768px)').matches ? 12 : 24;
 

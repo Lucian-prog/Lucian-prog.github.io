@@ -135,6 +135,11 @@ lucian:
       url: /tags/interface/
     - title: 安路 FPGA 音频项目复盘
       url: /tags/anlogic/
+  features:
+    toc: true
+    code_tools: true
+    mermaid: true
+    mermaid_script: https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js
   effects:
     firework:
       enable: true
