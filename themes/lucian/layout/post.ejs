@@ -21,3 +21,18 @@
     <%- page.content %>
   </div>
 </article>
+
+<% if (config.lucian.comments && config.lucian.comments.enable && config.lucian.comments.provider === 'utterances') { %>
+  <section class="content-card comments-card reveal">
+    <h2>Comments</h2>
+    <div class="comments-note">评论由 GitHub Issues 驱动。首次使用时可能需要安装或授权 utterances。</div>
+    <script src="https://utteranc.es/client.js"
+      repo="<%= config.lucian.comments.repo %>"
+      issue-term="<%= config.lucian.comments.issue_term %>"
+      label="<%= config.lucian.comments.label %>"
+      theme="<%= config.lucian.comments.theme %>"
+      crossorigin="anonymous"
+      async>
+    </script>
+  </section>
+<% } %>

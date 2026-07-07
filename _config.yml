@@ -133,6 +133,21 @@ lucian:
       url: /tags/interface/
     - title: 安路 FPGA 音频项目复盘
       url: /tags/anlogic/
+  effects:
+    firework:
+      enable: true
+      script: https://cdn.jsdelivr.net/npm/mouse-firework@0.2.0/dist/index.umd.js
+    live2d:
+      enable: true
+      script: https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js
+      model: https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json
+  comments:
+    enable: true
+    provider: utterances
+    repo: Lucian-prog/Lucian-prog.github.io
+    issue_term: pathname
+    label: comment
+    theme: github-dark
 
 # Deployment is handled by GitHub Actions.
 deploy:
