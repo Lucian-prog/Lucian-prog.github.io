@@ -226,6 +226,22 @@ if (editorPage) {
   const deleteButton = document.querySelector('[data-editor-action="delete"]');
   const copyButton = document.querySelector('[data-editor-action="copy"]');
   const downloadButton = document.querySelector('[data-editor-action="download"]');
+  const editorReady = titleInput
+    && slugInput
+    && categoriesInput
+    && tagsInput
+    && excerptInput
+    && bodyInput
+    && markdownOutput
+    && preview
+    && filename
+    && status
+    && draftList
+    && draftCount;
+
+  if (!editorReady) {
+    console.warn('Editor controls are incomplete; draft editor skipped.');
+  } else {
   let drafts = [];
   let activeDraftId = null;
   let saveTimer = null;
@@ -467,6 +483,7 @@ if (editorPage) {
     URL.revokeObjectURL(link.href);
     status.textContent = '已下载';
   });
+  }
 }
 
 if (ambientLayer && !reduceMotion) {
