@@ -1,11 +1,14 @@
+<% const archivePosts = (page.posts || site.posts).sort('-date'); %>
 <section class="content-card list-page reveal">
   <h1><%= page.archive ? '归档' : page.title || '归档' %></h1>
   <div class="archive-list">
-    <% page.posts.sort('-date').forEach((post) => { %>
+    <% if (archivePosts.length) { archivePosts.forEach((post) => { %>
       <a class="archive-item" href="<%- url_for(post.path) %>">
         <time><%= date(post.date, 'YYYY-MM-DD') %></time>
         <span><%= post.title %></span>
       </a>
-    <% }) %>
+    <% }) } else { %>
+      <p class="empty-note">暂时还没有发布笔记。可以先在写作页准备草稿，或者向 <code>source/_posts</code> 添加 Markdown 文件。</p>
+    <% } %>
   </div>
 </section>
