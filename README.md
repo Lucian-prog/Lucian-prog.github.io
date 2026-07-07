@@ -17,10 +17,53 @@ npm run dev
 
 ## Writing
 
+### 正式发布文章
+
+正式文章放在 `source/_posts/`，这些 Markdown 会参与构建并出现在首页、归档、分类、标签和搜索结果里。
+
 新增文章：
 
 ```powershell
-npx hexo new "post-title"
+npx hexo new post "RISC-V 指令格式笔记"
+```
+
+删除文章时，只删除 `source/_posts/` 中对应的 `.md` 文件，不要删除 `themes/`、`source/editor/`、`source/about/`、`source/friend/`、`.github/` 或 `_config.yml`。
+
+### 草稿
+
+暂时不发布的内容放在 `source/_drafts/`。
+
+```powershell
+npx hexo new draft "流水线冒险笔记"
+npx hexo publish post "流水线冒险笔记"
+```
+
+`publish` 后，草稿会从 `source/_drafts/` 移到 `source/_posts/`。
+
+### 网站写作页
+
+`/editor/` 是本地浏览器草稿箱和 Markdown 生成器。它会把草稿保存在当前浏览器的 `localStorage`，不会自动写入 GitHub 仓库。
+
+推荐流程：
+
+```text
+网站写作页起草 -> 复制 Markdown 或下载 .md -> 放入 source/_posts/ -> git commit -> git push
+```
+
+### 发布检查
+
+```powershell
+npm run clean
+npm run build
+npm run server -- --port 4002
+```
+
+本地确认无误后：
+
+```powershell
+git add source/_posts README.md
+git commit -m "Add notes"
+git push
 ```
 
 文章建议结构：

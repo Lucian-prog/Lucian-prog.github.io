@@ -62,6 +62,7 @@
   <nav class="top-nav">
     <a class="nav-logo" href="/"><%= config.lucian.hero.logo %></a>
     <div class="nav-actions">
+      <button class="search-toggle" type="button" aria-label="打开全局搜索" aria-haspopup="dialog" aria-expanded="false">⌕</button>
       <div class="theme-switcher">
         <button class="theme-toggle" type="button" aria-label="切换主题配色" aria-expanded="false">◐</button>
         <div class="theme-menu" role="menu" aria-label="主题配色">
@@ -94,6 +95,24 @@
   <main class="container">
     <%- body %>
   </main>
+
+  <section class="search-overlay" aria-hidden="true">
+    <div class="search-panel" role="dialog" aria-modal="true" aria-labelledby="searchTitle">
+      <div class="search-panel-header">
+        <div>
+          <p class="search-kicker">Global Search</p>
+          <h2 id="searchTitle">检索笔记</h2>
+        </div>
+        <button class="search-close" type="button" aria-label="关闭搜索">×</button>
+      </div>
+      <label class="search-input-wrap">
+        <span>Keyword</span>
+        <input id="siteSearchInput" type="search" autocomplete="off" placeholder="搜索 RISC-V、FIFO、APB、流水线..." />
+      </label>
+      <div class="search-status" id="siteSearchStatus">输入关键词后，将从标题、标签、分类和正文中检索。</div>
+      <div class="search-results" id="siteSearchResults"></div>
+    </div>
+  </section>
 
   <footer class="site-footer">
     <span>© <%= date(new Date(), 'YYYY') %> Lucian</span>

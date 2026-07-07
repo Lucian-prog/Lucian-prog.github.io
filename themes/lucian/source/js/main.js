@@ -6,10 +6,17 @@ const backToTop = document.querySelector('.back-to-top');
 const themeToggle = document.querySelector('.theme-toggle');
 const themeMenu = document.querySelector('.theme-menu');
 const themeButtons = document.querySelectorAll('[data-theme-choice]');
+const searchToggle = document.querySelector('.search-toggle');
+const searchOverlay = document.querySelector('.search-overlay');
+const searchClose = document.querySelector('.search-close');
+const searchInput = document.getElementById('siteSearchInput');
+const searchStatus = document.getElementById('siteSearchStatus');
+const searchResults = document.getElementById('siteSearchResults');
 const editorPage = document.querySelector('.editor-page');
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const siteFeatures = window.LUCIAN_FEATURES || {};
 const themeKey = 'lucian-color-theme';
+const searchPath = '/search.json';
 
 document.body.classList.add('is-loading');
 
@@ -98,6 +105,143 @@ if (themeToggle && themeMenu) {
   });
 }
 
+let searchIndex = null;
+let searchLoading = false;
+
+const setSearchStatus = (message) => {
+  if (searchStatus) searchStatus.textContent = message;
+};
+
+const renderSearchResults = (query) => {
+  if (!searchResults || !searchIndex) return;
+
+  const keyword = query.trim().toLowerCase();
+  searchResults.innerHTML = '';
+
+  if (!keyword) {
+    setSearchStatus('输入关键词后，将从标题、标签、分类和正文中检索。');
+    return;
+  }
+
+  const matches = searchIndex
+    .map((item) => {
+      const titleScore = item.titleText.includes(keyword) ? 8 : 0;
+      const metaScore = item.metaText.includes(keyword) ? 4 : 0;
+      const contentScore = item.contentText.includes(keyword) ? 1 : 0;
+      return { item, score: titleScore + metaScore + contentScore };
+    })
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || b.item.date.localeCompare(a.item.date))
+    .slice(0, 12);
+
+  if (!matches.length) {
+    setSearchStatus(`没有找到与 "${query}" 相关的笔记。`);
+    searchResults.innerHTML = '<div class="search-empty">没有匹配结果，可以换一个关键词试试。</div>';
+    return;
+  }
+
+  setSearchStatus(`找到 ${matches.length} 条相关笔记。`);
+
+  const fragment = document.createDocumentFragment();
+  matches.forEach(({ item }) => {
+    const result = document.createElement('a');
+    result.className = 'search-result-item';
+    result.href = item.url;
+    result.innerHTML = `
+      <span class="search-result-meta">${escapeHtml(item.date || 'Notes')} · ${escapeHtml(item.metaLabel || 'Uncategorized')}</span>
+      <strong>${highlightTerm(item.title || 'Untitled', query)}</strong>
+      <span>${highlightTerm(item.excerpt, query)}</span>
+    `;
+    fragment.appendChild(result);
+  });
+
+  searchResults.appendChild(fragment);
+};
+
+const loadSearchIndex = async () => {
+  if (searchIndex || searchLoading) return searchIndex;
+  searchLoading = true;
+  setSearchStatus('正在整理搜索索引...');
+
+  try {
+    const response = await fetch(searchPath, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Search index request failed: ${response.status}`);
+    const data = await response.json();
+
+    searchIndex = data.map((entry) => {
+      const categories = normalizeTaxonomy(entry.categories);
+      const tags = normalizeTaxonomy(entry.tags);
+      const content = stripMarkup(entry.content || '');
+      const excerpt = content.slice(0, 150) || '暂无摘要。';
+      const title = stripMarkup(entry.title || 'Untitled');
+      const url = entry.url || '#';
+      const dateMatch = url.match(/\/posts\/(\d{4})?/) ? '' : '';
+      const metaLabel = [...categories, ...tags].slice(0, 3).join(' / ');
+
+      return {
+        title,
+        url,
+        date: entry.date || dateMatch,
+        excerpt,
+        metaLabel,
+        titleText: normalizeSearchText(title),
+        metaText: normalizeSearchText([...categories, ...tags].join(' ')),
+        contentText: normalizeSearchText(content)
+      };
+    });
+
+    setSearchStatus(searchIndex.length ? '搜索索引已就绪。' : '当前还没有可搜索的正式笔记。');
+    return searchIndex;
+  } catch (error) {
+    searchIndex = [];
+    setSearchStatus('搜索索引加载失败，请稍后刷新页面。');
+    console.warn('Search index loading failed:', error);
+    return searchIndex;
+  } finally {
+    searchLoading = false;
+  }
+};
+
+const openSearch = async () => {
+  if (!searchOverlay || !searchInput) return;
+  searchOverlay.classList.add('is-open');
+  searchOverlay.setAttribute('aria-hidden', 'false');
+  searchToggle?.setAttribute('aria-expanded', 'true');
+  document.body.classList.add('is-searching');
+  await loadSearchIndex();
+  searchInput.focus();
+  renderSearchResults(searchInput.value);
+};
+
+const closeSearch = () => {
+  if (!searchOverlay) return;
+  searchOverlay.classList.remove('is-open');
+  searchOverlay.setAttribute('aria-hidden', 'true');
+  searchToggle?.setAttribute('aria-expanded', 'false');
+  document.body.classList.remove('is-searching');
+};
+
+if (searchToggle && searchOverlay && searchInput) {
+  searchToggle.addEventListener('click', openSearch);
+  searchClose?.addEventListener('click', closeSearch);
+  searchOverlay.addEventListener('click', (event) => {
+    if (event.target === searchOverlay) closeSearch();
+  });
+  searchInput.addEventListener('input', () => renderSearchResults(searchInput.value));
+
+  document.addEventListener('keydown', (event) => {
+    const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+    if ((event.key === '/' || (event.ctrlKey && event.key.toLowerCase() === 'k')) && !isTyping) {
+      event.preventDefault();
+      openSearch();
+    }
+
+    if (event.key === 'Escape' && searchOverlay.classList.contains('is-open')) {
+      closeSearch();
+    }
+  });
+}
+
 const escapeHtml = (value) => value
   .replace(/&/g, '&amp;')
   .replace(/</g, '&lt;')
@@ -127,6 +271,38 @@ const formatYamlList = (items) => {
 };
 
 const quoteYaml = (value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+
+const stripMarkup = (value = '') => value
+  .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+  .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&nbsp;/g, ' ')
+  .replace(/&amp;/g, '&')
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/&quot;/g, '"')
+  .replace(/&#39;/g, "'")
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const normalizeSearchText = (value = '') => stripMarkup(String(value)).toLowerCase();
+
+const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const highlightTerm = (value, term) => {
+  const escaped = escapeHtml(value);
+  const needle = term.trim();
+  if (!needle) return escaped;
+  return escaped.replace(new RegExp(`(${escapeRegExp(needle)})`, 'gi'), '<mark>$1</mark>');
+};
+
+const normalizeTaxonomy = (value) => {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => {
+    if (typeof item === 'string') return item;
+    return item?.name || item?.title || '';
+  }).filter(Boolean);
+};
 
 const renderDraftMarkdown = (markdown) => {
   const lines = markdown.split('\n');
