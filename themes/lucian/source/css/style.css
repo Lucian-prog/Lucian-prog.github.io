@@ -869,8 +869,15 @@ a {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   background: var(--bg-base);
+  color: var(--text-main);
   font-size: 0.9rem;
   font-weight: 600;
+}
+
+a.detail-tag:hover {
+  border-color: var(--accent-red);
+  color: var(--text-silver);
+  transform: translateY(-1px);
 }
 
 .detail-tag span {

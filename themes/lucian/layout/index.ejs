@@ -4,6 +4,18 @@
   const postCount = posts.length;
   const categoryCount = site.categories.length;
   const tagCount = site.tags.length;
+  const mainThread = config.lucian.main_thread || {};
+  const outline = Array.isArray(mainThread.outline) ? mainThread.outline : [];
+  const isDone = (item) => ['done', 'complete', 'completed', true].includes(item && item.status);
+  const doneCount = outline.filter(isDone).length;
+  const threadProgress = outline.length
+    ? Math.round((doneCount / outline.length) * 100)
+    : Number(mainThread.progress || 0);
+  const latestPost = latestPosts.first();
+  const nextOutline = outline.find((item) => !isDone(item));
+  const recentLabel = latestPost ? latestPost.title : (mainThread.recent || '暂无已发布笔记');
+  const recentUrl = latestPost ? url_for(latestPost.path) : '';
+  const nextLabel = nextOutline ? nextOutline.title : (outline.length ? '当前大纲已完成' : (mainThread.next || '等待补充大纲'));
 %>
 
 <header class="portal-card reveal">
@@ -35,15 +47,22 @@
 <h2 class="section-title">Current Main Thread</h2>
 <section class="learning-thread reveal">
   <div class="thread-header">
-    <div class="thread-title"><%= config.lucian.main_thread.title %></div>
-    <div class="thread-status">Progress: <%= config.lucian.main_thread.progress %>%</div>
+    <div class="thread-title"><%= mainThread.title %></div>
+    <div class="thread-status">Progress: <%= threadProgress %>%</div>
   </div>
   <div class="progress-track" aria-label="reading progress">
-    <div class="progress-fill" style="width: <%= config.lucian.main_thread.progress %>%"></div>
+    <div class="progress-fill" style="width: <%= Math.max(0, Math.min(threadProgress, 100)) %>%"></div>
   </div>
   <div class="thread-details">
-    <div class="detail-tag"><span>近期更新</span><%= config.lucian.main_thread.recent %></div>
-    <div class="detail-tag"><span>Next Step</span><%= config.lucian.main_thread.next %></div>
+    <% if (recentUrl) { %>
+      <a class="detail-tag" href="<%- recentUrl %>"><span>近期更新</span><%= recentLabel %></a>
+    <% } else { %>
+      <div class="detail-tag"><span>近期更新</span><%= recentLabel %></div>
+    <% } %>
+    <div class="detail-tag"><span>Next Step</span><%= nextLabel %></div>
+    <% if (outline.length) { %>
+      <div class="detail-tag"><span>Outline</span><%= doneCount %> / <%= outline.length %></div>
+    <% } %>
   </div>
 </section>
 

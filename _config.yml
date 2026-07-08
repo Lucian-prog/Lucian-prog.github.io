@@ -109,8 +109,19 @@ lucian:
   main_thread:
     title: 《数字设计和计算机体系结构：RISC-V 版》阅读笔记
     progress: 15
-    recent: 数字抽象与二进制表示
-    next: 组合逻辑与布尔代数
+    recent: 从 Verilog 到 SystemVerilog：第 4 章硬件描述语言笔记
+    next: 第 5 章：数字构件
+    outline:
+      - title: 第 4 章：硬件描述语言
+        status: done
+      - title: 第 5 章：数字构件
+        status: todo
+      - title: 第 6 章：体系结构
+        status: todo
+      - title: 第 7 章：微架构
+        status: todo
+      - title: 第 8 章：内存与 I/O 系统
+        status: todo
   topics:
     - title: Digital Design
       desc: 数字逻辑、组合/时序电路与基础门级设计笔记。
