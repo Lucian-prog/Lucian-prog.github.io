@@ -1,7 +1,6 @@
 const toggle = document.querySelector('.nav-toggle');
 const links = document.querySelector('.nav-links');
 const loader = document.querySelector('.site-loader');
-const ambientLayer = document.querySelector('.ambient-layer');
 const backToTop = document.querySelector('.back-to-top');
 const themeToggle = document.querySelector('.theme-toggle');
 const themeMenu = document.querySelector('.theme-menu');
@@ -17,6 +16,7 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 const siteFeatures = window.LUCIAN_FEATURES || {};
 const themeKey = 'lucian-color-theme';
 const searchPath = '/search.json';
+const lightThemes = new Set(['paper', 'claude-light']);
 
 document.body.classList.add('is-loading');
 
@@ -49,6 +49,17 @@ if (toggle && links) {
   });
 }
 
+const commentThemeFor = (theme) => lightThemes.has(theme) ? 'github-light' : 'github-dark';
+
+const syncUtterancesTheme = (theme) => {
+  const commentTheme = commentThemeFor(theme);
+  const script = document.getElementById('utterancesScript');
+  const frame = document.querySelector('.utterances-frame');
+
+  script?.setAttribute('theme', commentTheme);
+  frame?.contentWindow?.postMessage({ type: 'set-theme', theme: commentTheme }, 'https://utteranc.es');
+};
+
 const setColorTheme = (theme) => {
   document.documentElement.dataset.theme = theme;
 
@@ -63,10 +74,12 @@ const setColorTheme = (theme) => {
     button.classList.toggle('is-active', isActive);
     button.setAttribute('aria-current', isActive ? 'true' : 'false');
   });
+
+  syncUtterancesTheme(theme);
 };
 
 if (themeButtons.length > 0) {
-  let initialTheme = document.documentElement.dataset.theme || 'scarlet';
+  let initialTheme = document.documentElement.dataset.theme || 'claude-light';
 
   try {
     initialTheme = localStorage.getItem(themeKey) || initialTheme;
@@ -103,6 +116,18 @@ if (themeToggle && themeMenu) {
       themeToggle.setAttribute('aria-expanded', 'false');
     }
   });
+}
+
+const commentsCard = document.querySelector('.comments-card');
+
+if (commentsCard && 'MutationObserver' in window) {
+  const commentsObserver = new MutationObserver(() => {
+    if (commentsCard.querySelector('.utterances-frame')) {
+      syncUtterancesTheme(document.documentElement.dataset.theme || 'claude-light');
+    }
+  });
+
+  commentsObserver.observe(commentsCard, { childList: true, subtree: true });
 }
 
 let searchIndex = null;
@@ -850,7 +875,7 @@ if (postContent && featureEnabled('mermaid')) {
   const mermaidSources = [...mermaidFigures, ...mermaidPreBlocks];
 
   if (mermaidSources.length) {
-    const mermaidTheme = document.documentElement.dataset.theme === 'paper' ? 'default' : 'dark';
+    const mermaidTheme = lightThemes.has(document.documentElement.dataset.theme) ? 'default' : 'dark';
 
     loadScript(siteFeatures.features?.mermaid_script || 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js')
       .then(async () => {
@@ -882,21 +907,6 @@ if (postContent && featureEnabled('mermaid')) {
         }
       })
       .catch(() => {});
-  }
-}
-
-if (ambientLayer && !reduceMotion) {
-  const dotCount = window.matchMedia('(max-width: 768px)').matches ? 12 : 24;
-
-  for (let i = 0; i < dotCount; i += 1) {
-    const dot = document.createElement('span');
-    dot.className = 'ambient-dot';
-    dot.style.setProperty('--left', `${Math.random() * 100}%`);
-    dot.style.setProperty('--size', `${Math.floor(Math.random() * 3) + 3}px`);
-    dot.style.setProperty('--duration', `${Math.random() * 10 + 14}s`);
-    dot.style.setProperty('--delay', `${Math.random() * -18}s`);
-    dot.style.setProperty('--drift', `${Math.random() * 80 - 40}px`);
-    ambientLayer.appendChild(dot);
   }
 }
 
