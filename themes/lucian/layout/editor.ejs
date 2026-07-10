@@ -1,56 +1,79 @@
+<%
+  const legacyProgress = config.lucian.main_thread || {};
+  const publishedProgress = site.data && site.data.progress
+    ? site.data.progress
+    : {
+      title: legacyProgress.title || '学习主线',
+      chapters: Array.isArray(legacyProgress.outline)
+        ? legacyProgress.outline.map((item) => ({
+          title: item.title,
+          progress: ['done', 'complete', 'completed', true].includes(item.status) ? 100 : 0
+        }))
+        : []
+    };
+  const publishedProgressJson = JSON.stringify(publishedProgress).replace(/</g, '\\u003c');
+%>
+
 <section class="content-card editor-page reveal">
   <header class="editor-header">
     <div>
-      <p class="editor-kicker">Local Draft Console</p>
-      <h1>文章编辑器</h1>
-      <p>用于起草 Hexo Markdown 文章，内容只保存在当前浏览器中。</p>
+      <p class="editor-kicker">Local Workspace</p>
+      <h1>写作与学习管理</h1>
+      <p>文章草稿和学习主线均保存在当前浏览器中。</p>
     </div>
-    <div class="editor-actions">
+  </header>
+
+  <div class="editor-tabs" role="tablist" aria-label="写作工具">
+    <button class="editor-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="editorDraftPanel" data-editor-tab="drafts">文章草稿</button>
+    <button class="editor-tab" type="button" role="tab" aria-selected="false" aria-controls="editorProgressPanel" data-editor-tab="progress">学习进度</button>
+  </div>
+
+  <section class="editor-view is-active" id="editorDraftPanel" role="tabpanel" data-editor-view="drafts">
+    <div class="editor-actions editor-view-actions">
       <button class="editor-button" type="button" data-editor-action="new">新建草稿</button>
       <button class="editor-button" type="button" data-editor-action="save">保存草稿</button>
       <button class="editor-button editor-button-danger" type="button" data-editor-action="delete">删除草稿</button>
       <button class="editor-button" type="button" data-editor-action="copy">复制 Markdown</button>
       <button class="editor-button editor-button-primary" type="button" data-editor-action="download">下载 .md</button>
     </div>
-  </header>
 
-  <div class="editor-shell">
-    <aside class="draft-box">
-      <div class="draft-box-header">
-        <div>
-          <span>Drafts</span>
-          <strong id="draftCount">0</strong>
+    <div class="editor-shell">
+      <aside class="draft-box">
+        <div class="draft-box-header">
+          <div>
+            <span>Drafts</span>
+            <strong id="draftCount">0</strong>
+          </div>
+          <button class="draft-mini-button" type="button" data-editor-action="new" aria-label="新建草稿" title="新建草稿">+</button>
         </div>
-        <button class="draft-mini-button" type="button" data-editor-action="new">+</button>
-      </div>
-      <div class="draft-list" id="draftList" aria-label="草稿列表"></div>
-    </aside>
+        <div class="draft-list" id="draftList" aria-label="草稿列表"></div>
+      </aside>
 
-    <div class="editor-workspace">
-      <form class="editor-form" autocomplete="off">
-        <label>
-          <span>标题</span>
-          <input id="draftTitle" type="text" value="新的学习笔记">
-        </label>
-        <label>
-          <span>Slug / 文件名</span>
-          <input id="draftSlug" type="text" value="new-learning-note">
-        </label>
-        <label>
-          <span>主分类</span>
-          <input id="draftCategories" type="text" value="Reading Notes">
-        </label>
-        <label>
-          <span>标签</span>
-          <input id="draftTags" type="text" value="digital-design, systemverilog, verilog">
-        </label>
-        <label class="editor-wide">
-          <span>摘要</span>
-          <textarea id="draftExcerpt" rows="3">记录一个具体问题、核心结论和后续复盘方向。</textarea>
-        </label>
-        <label class="editor-wide">
-          <span>正文 Markdown</span>
-          <textarea id="draftBody" rows="18">## 问题背景
+      <div class="editor-workspace">
+        <form class="editor-form" autocomplete="off">
+          <label>
+            <span>标题</span>
+            <input id="draftTitle" type="text" value="新的学习笔记">
+          </label>
+          <label>
+            <span>Slug / 文件名</span>
+            <input id="draftSlug" type="text" value="new-learning-note">
+          </label>
+          <label>
+            <span>主分类</span>
+            <input id="draftCategories" type="text" value="Reading Notes">
+          </label>
+          <label>
+            <span>标签</span>
+            <input id="draftTags" type="text" value="digital-design, systemverilog, verilog">
+          </label>
+          <label class="editor-wide">
+            <span>摘要</span>
+            <textarea id="draftExcerpt" rows="3">记录一个具体问题、核心结论和后续复盘方向。</textarea>
+          </label>
+          <label class="editor-wide">
+            <span>正文 Markdown</span>
+            <textarea id="draftBody" rows="18">## 问题背景
 
 这里记录学习动机、章节来源和核心问题。
 
@@ -71,21 +94,79 @@ endmodule
 ## 复盘
 
 这里整理仿真结果、波形观察和后续问题。</textarea>
-        </label>
-      </form>
+          </label>
+        </form>
 
-      <aside class="editor-output">
-        <div class="editor-output-header">
-          <span>Markdown 输出</span>
-          <strong id="draftFilename">new-learning-note.md</strong>
+        <aside class="editor-output">
+          <div class="editor-output-header">
+            <span>Markdown 输出</span>
+            <strong id="draftFilename">new-learning-note.md</strong>
+          </div>
+          <textarea id="draftMarkdown" rows="13" readonly></textarea>
+          <div class="editor-output-header">
+            <span>预览</span>
+            <strong id="draftStatus">已同步</strong>
+          </div>
+          <div class="editor-preview post-content" id="draftPreview"></div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="editor-view" id="editorProgressPanel" role="tabpanel" data-editor-view="progress" hidden>
+    <div class="editor-actions editor-view-actions">
+      <button class="editor-button" type="button" data-progress-action="reset">恢复线上数据</button>
+      <button class="editor-button" type="button" data-progress-action="copy">复制 YAML</button>
+      <button class="editor-button editor-button-primary" type="button" data-progress-action="download">下载 progress.yml</button>
+    </div>
+
+    <div class="progress-manager-grid">
+      <div class="progress-manager-form">
+        <label class="progress-title-field">
+          <span>学习主线标题</span>
+          <input id="progressTitle" type="text" autocomplete="off">
+        </label>
+
+        <div class="progress-manager-heading">
+          <div>
+            <span>章节</span>
+            <strong id="progressChapterCount">0</strong>
+          </div>
+          <button class="editor-button" type="button" data-progress-action="add">新增章节</button>
         </div>
-        <textarea id="draftMarkdown" rows="13" readonly></textarea>
-        <div class="editor-output-header">
-          <span>预览</span>
-          <strong id="draftStatus">已同步</strong>
+
+        <div class="progress-chapter-list" id="progressChapterList"></div>
+        <div class="progress-manager-status" id="progressManagerStatus" role="status">已载入线上数据</div>
+      </div>
+
+      <aside class="progress-manager-output">
+        <div class="progress-preview-card">
+          <div class="progress-preview-header">
+            <span>总体进度</span>
+            <strong id="progressOverall">0%</strong>
+          </div>
+          <div class="progress-preview-track" aria-hidden="true">
+            <span id="progressPreviewFill"></span>
+          </div>
+          <div class="progress-preview-counts">
+            <span><strong id="progressDoneCount">0</strong> 已完成</span>
+            <span><strong id="progressDoingCount">0</strong> 进行中</span>
+            <span><strong id="progressTodoCount">0</strong> 未开始</span>
+          </div>
+          <div class="progress-preview-next">
+            <span>Next Step</span>
+            <strong id="progressNextStep">等待补充章节</strong>
+          </div>
         </div>
-        <div class="editor-preview post-content" id="draftPreview"></div>
+
+        <div class="editor-output-header">
+          <span>progress.yml</span>
+          <strong id="progressOutputStatus">可导出</strong>
+        </div>
+        <textarea id="progressYaml" rows="18" readonly></textarea>
       </aside>
     </div>
-  </div>
+  </section>
 </section>
+
+<script id="publishedProgressData" type="application/json"><%- publishedProgressJson %></script>

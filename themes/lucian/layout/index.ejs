@@ -4,18 +4,31 @@
   const postCount = posts.length;
   const categoryCount = site.categories.length;
   const tagCount = site.tags.length;
-  const mainThread = config.lucian.main_thread || {};
-  const outline = Array.isArray(mainThread.outline) ? mainThread.outline : [];
-  const isDone = (item) => ['done', 'complete', 'completed', true].includes(item && item.status);
-  const doneCount = outline.filter(isDone).length;
-  const threadProgress = outline.length
-    ? Math.round((doneCount / outline.length) * 100)
-    : Number(mainThread.progress || 0);
+  const publishedProgress = site.data && site.data.progress ? site.data.progress : null;
+  const legacyThread = config.lucian.main_thread || {};
+  const mainThread = publishedProgress || legacyThread;
+  const legacyOutline = Array.isArray(legacyThread.outline) ? legacyThread.outline : [];
+  const rawChapters = Array.isArray(mainThread.chapters) ? mainThread.chapters : legacyOutline;
+  const clampProgress = (value) => Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+  const chapters = rawChapters.map((item) => ({
+    title: item && item.title ? item.title : '未命名章节',
+    progress: item && Object.prototype.hasOwnProperty.call(item, 'progress')
+      ? clampProgress(item.progress)
+      : (['done', 'complete', 'completed', true].includes(item && item.status) ? 100 : 0)
+  }));
+  const threadProgress = chapters.length
+    ? Math.round(chapters.reduce((total, chapter) => total + chapter.progress, 0) / chapters.length)
+    : clampProgress(legacyThread.progress);
+  const doneCount = chapters.filter((chapter) => chapter.progress === 100).length;
+  const doingCount = chapters.filter((chapter) => chapter.progress > 0 && chapter.progress < 100).length;
   const latestPost = latestPosts.first();
-  const nextOutline = outline.find((item) => !isDone(item));
+  const currentChapterIndex = chapters.findIndex((chapter) => chapter.progress < 100);
+  const nextChapter = currentChapterIndex >= 0 ? chapters[currentChapterIndex] : null;
   const recentLabel = latestPost ? latestPost.title : (mainThread.recent || '暂无已发布笔记');
   const recentUrl = latestPost ? url_for(latestPost.path) : '';
-  const nextLabel = nextOutline ? nextOutline.title : (outline.length ? '当前大纲已完成' : (mainThread.next || '等待补充大纲'));
+  const nextLabel = nextChapter
+    ? `${nextChapter.title} · ${nextChapter.progress}%`
+    : (chapters.length ? '当前大纲已完成' : (mainThread.next || '等待补充大纲'));
 %>
 
 <header class="portal-card reveal">
@@ -50,8 +63,25 @@
     <div class="thread-title"><%= mainThread.title %></div>
     <div class="thread-status">Progress: <%= threadProgress %>%</div>
   </div>
-  <div class="progress-track" aria-label="reading progress">
-    <div class="progress-fill" style="width: <%= Math.max(0, Math.min(threadProgress, 100)) %>%"></div>
+  <div class="progress-rail" aria-label="总体阅读进度 <%= threadProgress %>%">
+    <div class="progress-track">
+      <div class="progress-fill" style="width: <%= threadProgress %>%"></div>
+    </div>
+    <% if (chapters.length) { %>
+      <div class="progress-milestones" aria-label="章节进度">
+        <% chapters.forEach((chapter, index) => {
+          const position = chapters.length === 1 ? 50 : (index / (chapters.length - 1)) * 100;
+          const stateClass = chapter.progress === 100 ? 'is-done' : (index === currentChapterIndex ? 'is-current' : (chapter.progress > 0 ? 'is-active' : 'is-todo'));
+        %>
+          <span
+            class="progress-milestone <%= stateClass %>"
+            style="--milestone-position: <%= position %>%"
+            title="<%= chapter.title %> · <%= chapter.progress %>%"
+            aria-label="<%= chapter.title %>，<%= chapter.progress %>%"
+          ></span>
+        <% }) %>
+      </div>
+    <% } %>
   </div>
   <div class="thread-details">
     <% if (recentUrl) { %>
@@ -60,8 +90,8 @@
       <div class="detail-tag"><span>近期更新</span><%= recentLabel %></div>
     <% } %>
     <div class="detail-tag"><span>Next Step</span><%= nextLabel %></div>
-    <% if (outline.length) { %>
-      <div class="detail-tag"><span>Outline</span><%= doneCount %> / <%= outline.length %></div>
+    <% if (chapters.length) { %>
+      <div class="detail-tag"><span>Outline</span><%= doneCount %> 完成<% if (doingCount) { %> · <%= doingCount %> 进行中<% } %> · <%= chapters.length %> 章</div>
     <% } %>
   </div>
 </section>

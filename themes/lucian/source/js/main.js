@@ -18,6 +18,10 @@ const themeKey = 'lucian-color-theme';
 const searchPath = '/search.json';
 const lightThemes = new Set(['paper', 'claude-light']);
 
+if (editorPage) {
+  document.body.classList.add('has-editor-workspace');
+}
+
 document.body.classList.add('is-loading');
 
 const loadScript = (src) => new Promise((resolve, reject) => {
@@ -694,6 +698,351 @@ if (editorPage) {
     URL.revokeObjectURL(link.href);
     status.textContent = '已下载';
   });
+  }
+}
+
+if (editorPage) {
+  const editorTabs = Array.from(document.querySelectorAll('[data-editor-tab]'));
+  const editorViews = Array.from(document.querySelectorAll('[data-editor-view]'));
+
+  const activateEditorView = (viewName) => {
+    editorTabs.forEach((tab) => {
+      const isActive = tab.dataset.editorTab === viewName;
+      tab.classList.toggle('is-active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
+    });
+
+    editorViews.forEach((view) => {
+      const isActive = view.dataset.editorView === viewName;
+      view.classList.toggle('is-active', isActive);
+      view.hidden = !isActive;
+    });
+  };
+
+  editorTabs.forEach((tab) => {
+    tab.addEventListener('click', () => activateEditorView(tab.dataset.editorTab));
+  });
+
+  const progressStorageKey = 'lucian-progress-manager-v1';
+  const publishedDataElement = document.getElementById('publishedProgressData');
+  const progressTitleInput = document.getElementById('progressTitle');
+  const progressChapterList = document.getElementById('progressChapterList');
+  const progressChapterCount = document.getElementById('progressChapterCount');
+  const progressManagerStatus = document.getElementById('progressManagerStatus');
+  const progressOverall = document.getElementById('progressOverall');
+  const progressPreviewFill = document.getElementById('progressPreviewFill');
+  const progressDoneCount = document.getElementById('progressDoneCount');
+  const progressDoingCount = document.getElementById('progressDoingCount');
+  const progressTodoCount = document.getElementById('progressTodoCount');
+  const progressNextStep = document.getElementById('progressNextStep');
+  const progressYaml = document.getElementById('progressYaml');
+  const progressOutputStatus = document.getElementById('progressOutputStatus');
+  const progressResetButton = document.querySelector('[data-progress-action="reset"]');
+  const progressCopyButton = document.querySelector('[data-progress-action="copy"]');
+  const progressDownloadButton = document.querySelector('[data-progress-action="download"]');
+  const progressAddButton = document.querySelector('[data-progress-action="add"]');
+  const progressReady = publishedDataElement
+    && progressTitleInput
+    && progressChapterList
+    && progressChapterCount
+    && progressManagerStatus
+    && progressOverall
+    && progressPreviewFill
+    && progressDoneCount
+    && progressDoingCount
+    && progressTodoCount
+    && progressNextStep
+    && progressYaml
+    && progressOutputStatus
+    && progressCopyButton
+    && progressDownloadButton;
+
+  if (!progressReady) {
+    console.warn('Progress manager controls are incomplete; progress editor skipped.');
+  } else {
+    let chapterSequence = 0;
+
+    const clampChapterProgress = (value) => Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+
+    const createProgressChapter = (chapter = {}) => ({
+      id: chapter.id || `chapter-${Date.now()}-${chapterSequence += 1}`,
+      title: typeof chapter.title === 'string' ? chapter.title : '',
+      progress: clampChapterProgress(chapter.progress)
+    });
+
+    const normalizeProgressState = (value) => ({
+      title: typeof value?.title === 'string' ? value.title : '',
+      chapters: Array.isArray(value?.chapters) ? value.chapters.map(createProgressChapter) : []
+    });
+
+    const cloneProgressState = (value) => normalizeProgressState({
+      title: value.title,
+      chapters: value.chapters.map((chapter) => ({
+        title: chapter.title,
+        progress: chapter.progress
+      }))
+    });
+
+    let publishedProgressState;
+
+    try {
+      publishedProgressState = normalizeProgressState(JSON.parse(publishedDataElement.textContent || '{}'));
+    } catch (error) {
+      publishedProgressState = normalizeProgressState({});
+    }
+
+    const readStoredProgress = () => {
+      try {
+        const stored = JSON.parse(localStorage.getItem(progressStorageKey) || 'null');
+        return stored ? normalizeProgressState(stored) : null;
+      } catch (error) {
+        return null;
+      }
+    };
+
+    let progressState = readStoredProgress() || cloneProgressState(publishedProgressState);
+
+    const progressStatus = (value) => {
+      if (value === 100) return { label: '已完成', className: 'is-done' };
+      if (value > 0) return { label: '进行中', className: 'is-doing' };
+      return { label: '未开始', className: 'is-todo' };
+    };
+
+    const validateProgressState = () => {
+      if (!progressState.title.trim()) return '学习主线标题不能为空';
+      if (!progressState.chapters.length) return '至少需要一个章节';
+      const emptyIndex = progressState.chapters.findIndex((chapter) => !chapter.title.trim());
+      if (emptyIndex >= 0) return `第 ${emptyIndex + 1} 个章节标题不能为空`;
+      return '';
+    };
+
+    const buildProgressYaml = () => {
+      const chapterLines = progressState.chapters.flatMap((chapter) => [
+        `  - title: ${quoteYaml(chapter.title.trim())}`,
+        `    progress: ${clampChapterProgress(chapter.progress)}`
+      ]);
+
+      return `title: ${quoteYaml(progressState.title.trim())}\nchapters:\n${chapterLines.join('\n')}\n`;
+    };
+
+    const persistProgressState = () => {
+      try {
+        localStorage.setItem(progressStorageKey, JSON.stringify({
+          title: progressState.title,
+          chapters: progressState.chapters.map((chapter) => ({
+            title: chapter.title,
+            progress: chapter.progress
+          }))
+        }));
+        return true;
+      } catch (error) {
+        return false;
+      }
+    };
+
+    const syncProgressPreview = (message = '已自动保存') => {
+      const total = progressState.chapters.reduce((sum, chapter) => sum + clampChapterProgress(chapter.progress), 0);
+      const overall = progressState.chapters.length ? Math.round(total / progressState.chapters.length) : 0;
+      const done = progressState.chapters.filter((chapter) => chapter.progress === 100).length;
+      const doing = progressState.chapters.filter((chapter) => chapter.progress > 0 && chapter.progress < 100).length;
+      const todo = progressState.chapters.filter((chapter) => chapter.progress === 0).length;
+      const nextChapter = progressState.chapters.find((chapter) => chapter.progress < 100);
+      const validationMessage = validateProgressState();
+      const stored = persistProgressState();
+
+      progressChapterCount.textContent = String(progressState.chapters.length);
+      progressOverall.textContent = `${overall}%`;
+      progressPreviewFill.style.width = `${overall}%`;
+      progressDoneCount.textContent = String(done);
+      progressDoingCount.textContent = String(doing);
+      progressTodoCount.textContent = String(todo);
+      progressNextStep.textContent = nextChapter
+        ? `${nextChapter.title.trim() || '未命名章节'} · ${nextChapter.progress}%`
+        : (progressState.chapters.length ? '当前大纲已完成' : '等待补充章节');
+      progressYaml.value = buildProgressYaml();
+      progressOutputStatus.textContent = validationMessage ? '需要修正' : '可导出';
+      progressOutputStatus.classList.toggle('is-invalid', Boolean(validationMessage));
+      progressCopyButton.disabled = Boolean(validationMessage);
+      progressDownloadButton.disabled = Boolean(validationMessage);
+      progressManagerStatus.textContent = validationMessage || (stored ? message : '本地存储不可用');
+      progressManagerStatus.classList.toggle('is-error', Boolean(validationMessage) || !stored);
+    };
+
+    const updateChapterControlState = (row, chapter, rangeInput, numberInput, badge) => {
+      const statusInfo = progressStatus(chapter.progress);
+      row.dataset.progressStatus = statusInfo.className;
+      row.style.setProperty('--chapter-progress', `${chapter.progress}%`);
+      rangeInput.value = String(chapter.progress);
+      numberInput.value = String(chapter.progress);
+      badge.textContent = statusInfo.label;
+      badge.className = `progress-chapter-status ${statusInfo.className}`;
+    };
+
+    const renderProgressChapters = () => {
+      progressChapterList.innerHTML = '';
+
+      if (!progressState.chapters.length) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'progress-chapter-empty';
+        emptyState.textContent = '尚无章节';
+        progressChapterList.appendChild(emptyState);
+        syncProgressPreview();
+        return;
+      }
+
+      progressState.chapters.forEach((chapter, index) => {
+        const row = document.createElement('article');
+        row.className = 'progress-chapter-row';
+
+        const rowHeader = document.createElement('div');
+        rowHeader.className = 'progress-chapter-header';
+
+        const chapterIndex = document.createElement('span');
+        chapterIndex.className = 'progress-chapter-index';
+        chapterIndex.textContent = String(index + 1).padStart(2, '0');
+
+        const chapterTitle = document.createElement('input');
+        chapterTitle.className = 'progress-chapter-title';
+        chapterTitle.type = 'text';
+        chapterTitle.value = chapter.title;
+        chapterTitle.setAttribute('aria-label', `第 ${index + 1} 个章节标题`);
+
+        const badge = document.createElement('span');
+
+        const rowActions = document.createElement('div');
+        rowActions.className = 'progress-chapter-actions';
+
+        const createIconButton = (symbol, label, disabled, handler) => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'progress-icon-button';
+          button.textContent = symbol;
+          button.disabled = disabled;
+          button.setAttribute('aria-label', label);
+          button.title = label;
+          button.addEventListener('click', handler);
+          return button;
+        };
+
+        rowActions.append(
+          createIconButton('↑', `上移第 ${index + 1} 个章节`, index === 0, () => {
+            [progressState.chapters[index - 1], progressState.chapters[index]] = [progressState.chapters[index], progressState.chapters[index - 1]];
+            renderProgressChapters();
+          }),
+          createIconButton('↓', `下移第 ${index + 1} 个章节`, index === progressState.chapters.length - 1, () => {
+            [progressState.chapters[index], progressState.chapters[index + 1]] = [progressState.chapters[index + 1], progressState.chapters[index]];
+            renderProgressChapters();
+          }),
+          createIconButton('×', `删除第 ${index + 1} 个章节`, false, () => {
+            const confirmed = window.confirm(`删除章节「${chapter.title || `第 ${index + 1} 章`}」？`);
+            if (!confirmed) return;
+            progressState.chapters.splice(index, 1);
+            renderProgressChapters();
+          })
+        );
+
+        rowHeader.append(chapterIndex, chapterTitle, badge, rowActions);
+
+        const progressControls = document.createElement('div');
+        progressControls.className = 'progress-chapter-controls';
+
+        const rangeInput = document.createElement('input');
+        rangeInput.type = 'range';
+        rangeInput.min = '0';
+        rangeInput.max = '100';
+        rangeInput.step = '1';
+        rangeInput.setAttribute('aria-label', `${chapter.title || `第 ${index + 1} 章`}进度`);
+
+        const numberWrap = document.createElement('label');
+        numberWrap.className = 'progress-number-field';
+        const numberInput = document.createElement('input');
+        numberInput.type = 'number';
+        numberInput.min = '0';
+        numberInput.max = '100';
+        numberInput.step = '1';
+        numberInput.setAttribute('aria-label', `${chapter.title || `第 ${index + 1} 章`}进度百分比`);
+        const percentLabel = document.createElement('span');
+        percentLabel.textContent = '%';
+        numberWrap.append(numberInput, percentLabel);
+
+        progressControls.append(rangeInput, numberWrap);
+        row.append(rowHeader, progressControls);
+        progressChapterList.appendChild(row);
+
+        updateChapterControlState(row, chapter, rangeInput, numberInput, badge);
+
+        chapterTitle.addEventListener('input', () => {
+          chapter.title = chapterTitle.value;
+          rangeInput.setAttribute('aria-label', `${chapter.title || `第 ${index + 1} 章`}进度`);
+          numberInput.setAttribute('aria-label', `${chapter.title || `第 ${index + 1} 章`}进度百分比`);
+          syncProgressPreview();
+        });
+
+        rangeInput.addEventListener('input', () => {
+          chapter.progress = clampChapterProgress(rangeInput.value);
+          updateChapterControlState(row, chapter, rangeInput, numberInput, badge);
+          syncProgressPreview();
+        });
+
+        const updateFromNumber = () => {
+          chapter.progress = clampChapterProgress(numberInput.value);
+          updateChapterControlState(row, chapter, rangeInput, numberInput, badge);
+          syncProgressPreview();
+        };
+
+        numberInput.addEventListener('input', () => {
+          if (numberInput.value !== '') updateFromNumber();
+        });
+        numberInput.addEventListener('change', updateFromNumber);
+      });
+
+      syncProgressPreview();
+    };
+
+    progressTitleInput.value = progressState.title;
+    progressTitleInput.addEventListener('input', () => {
+      progressState.title = progressTitleInput.value;
+      syncProgressPreview();
+    });
+
+    progressAddButton?.addEventListener('click', () => {
+      progressState.chapters.push(createProgressChapter({ title: '新章节', progress: 0 }));
+      renderProgressChapters();
+      const titleFields = progressChapterList.querySelectorAll('.progress-chapter-title');
+      titleFields[titleFields.length - 1]?.focus();
+      titleFields[titleFields.length - 1]?.select();
+    });
+
+    progressResetButton?.addEventListener('click', () => {
+      const confirmed = window.confirm('恢复线上进度？当前浏览器中的进度调整将被覆盖。');
+      if (!confirmed) return;
+      progressState = cloneProgressState(publishedProgressState);
+      progressTitleInput.value = progressState.title;
+      renderProgressChapters();
+      progressManagerStatus.textContent = '已恢复线上数据';
+    });
+
+    progressCopyButton?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(progressYaml.value);
+      } catch (error) {
+        progressYaml.select();
+        document.execCommand('copy');
+      }
+      progressManagerStatus.textContent = '已复制 progress.yml';
+    });
+
+    progressDownloadButton?.addEventListener('click', () => {
+      const blob = new Blob([progressYaml.value], { type: 'text/yaml;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'progress.yml';
+      link.click();
+      URL.revokeObjectURL(link.href);
+      progressManagerStatus.textContent = '已下载 progress.yml';
+    });
+
+    renderProgressChapters();
   }
 }
 

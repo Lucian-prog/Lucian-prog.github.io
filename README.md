@@ -52,6 +52,42 @@ npx hexo publish post "流水线冒险笔记"
 网站写作页起草 -> 复制 Markdown 或下载 .md -> 放入 source/_posts/ -> git commit -> git push
 ```
 
+### 学习进度
+
+首页学习主线读取 `source/_data/progress.yml`。每个章节使用 `0` 到 `100` 的整数表示进度，总进度是所有章节百分比的平均值。
+
+可以在 `/editor/` 切换到“学习进度”，调整标题、章节顺序和百分比。页面会把修改自动保存在当前浏览器中，但不会直接修改 GitHub 仓库。
+
+发布进度：
+
+1. 在网站写作页下载 `progress.yml`。
+2. 用下载文件替换仓库中的 `source/_data/progress.yml`。
+3. 执行构建检查。
+
+   ```powershell
+   npm run clean
+   npm run build
+   ```
+
+4. 提交并推送修改。
+
+   ```powershell
+   git add source/_data/progress.yml
+   git commit -m "Update learning progress"
+   git push
+   ```
+
+配置格式：
+
+```yaml
+title: "《数字设计和计算机体系结构：RISC-V 版》阅读笔记"
+chapters:
+  - title: "第 4 章：硬件描述语言"
+    progress: 100
+  - title: "第 5 章：数字构件"
+    progress: 50
+```
+
 ### 发布检查
 
 ```powershell
@@ -86,16 +122,14 @@ git push
 
 RTL 代码块可以使用：
 
-````markdown
-```systemverilog
-always_ff @(posedge clk_i or negedge rst_n_i) begin
-  if (!rst_n_i) begin
-    q_o <= '0;
-  end else begin
-    q_o <= d_i;
-  end
-end
-```
-````
+    ```systemverilog
+    always_ff @(posedge clk_i or negedge rst_n_i) begin
+      if (!rst_n_i) begin
+        q_o <= '0;
+      end else begin
+        q_o <= d_i;
+      end
+    end
+    ```
 
 站点会在构建时把 `systemverilog` / `sv` 代码块交给 Verilog 高亮器处理。
