@@ -5,7 +5,7 @@ chapters:
   - title: "第 5 章：数字构件"
     progress: 100
   - title: "第 6 章：体系结构"
-    progress: 20
+    progress: 100
   - title: "第 7 章：微架构"
     progress: 0
   - title: "第 8 章：内存与 I/O 系统"
