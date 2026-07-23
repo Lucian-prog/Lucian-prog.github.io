@@ -145,8 +145,15 @@ endmodule
                 </div>
               </div>
               <input id="draftImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+              <div class="asset-localization-alert" id="assetLocalizationAlert" role="alert" hidden>
+                <div>
+                  <strong id="assetLocalizationTitle">图片本地化失败</strong>
+                  <span>原链接已保留，可修复链接后重新粘贴。</span>
+                </div>
+                <ul id="assetLocalizationFailures"></ul>
+              </div>
               <div class="asset-list" id="draftAssetList"></div>
-              <p class="asset-empty" id="draftAssetEmpty">可直接粘贴截图、拖入图片，或从本地选择文件。</p>
+              <p class="asset-empty" id="draftAssetEmpty">可粘贴整篇 Markdown 自动抓取图片，也可直接粘贴截图、拖入或选择图片。</p>
             </section>
           </section>
 

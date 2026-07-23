@@ -11,6 +11,7 @@
   const DATABASE_NAME = 'lucian-editor';
   const ASSET_STORE_NAME = 'assets';
   const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
+  const IMAGE_FETCH_TIMEOUT = 15000;
   const ALLOWED_IMAGE_TYPES = new Set([
     'image/png',
     'image/jpeg',
@@ -35,6 +36,9 @@
     assetList: document.getElementById('draftAssetList'),
     assetEmpty: document.getElementById('draftAssetEmpty'),
     assetSummary: document.getElementById('assetSummary'),
+    localizationAlert: document.getElementById('assetLocalizationAlert'),
+    localizationTitle: document.getElementById('assetLocalizationTitle'),
+    localizationFailures: document.getElementById('assetLocalizationFailures'),
     imageInput: document.getElementById('draftImageInput'),
     dropZone: document.getElementById('draftDropZone')
   };
@@ -52,6 +56,97 @@
     .replace(/'/g, '&#39;');
 
   const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const fencedCodeRanges = (markdown) => {
+    const ranges = [];
+    const lines = markdown.match(/.*(?:\r?\n|$)/g) || [];
+    let offset = 0;
+    let openFence = null;
+
+    lines.forEach((line) => {
+      const opening = line.match(/^ {0,3}(`{3,}|~{3,})/);
+      if (!openFence && opening) {
+        openFence = {
+          start: offset,
+          character: opening[1][0],
+          length: opening[1].length
+        };
+      } else if (openFence) {
+        const closingPattern = new RegExp(
+          `^ {0,3}${escapeRegExp(openFence.character)}{${openFence.length},}\\s*(?:\\r?\\n)?$`
+        );
+        if (closingPattern.test(line)) {
+          ranges.push({ start: openFence.start, end: offset + line.length });
+          openFence = null;
+        }
+      }
+      offset += line.length;
+    });
+
+    if (openFence) ranges.push({ start: openFence.start, end: markdown.length });
+    return ranges;
+  };
+
+  const isInsideInlineCode = (markdown, index) => {
+    const lineStart = markdown.lastIndexOf('\n', Math.max(0, index - 1)) + 1;
+    const nextBreak = markdown.indexOf('\n', index);
+    const lineEnd = nextBreak === -1 ? markdown.length : nextBreak;
+    const line = markdown.slice(lineStart, lineEnd);
+    const relativeIndex = index - lineStart;
+    const codeSpanPattern = /(`+)[^`]*?\1/g;
+    let span;
+
+    while ((span = codeSpanPattern.exec(line)) !== null) {
+      if (relativeIndex >= span.index && relativeIndex < span.index + span[0].length) return true;
+    }
+    return false;
+  };
+
+  const scanMarkdownImages = (markdown) => {
+    const pattern = /!\[([^\]\r\n]*)\]\(\s*(?:<([^>\r\n]+)>|((?:\\.|[^\s\r\n)])+?))(?:\s+(?:"[^"\r\n]*"|'[^'\r\n]*'|\([^)\r\n]*\)))?\s*\)/g;
+    const codeRanges = fencedCodeRanges(markdown);
+    const images = [];
+    let match;
+
+    while ((match = pattern.exec(markdown)) !== null) {
+      if (
+        codeRanges.some((range) => match.index >= range.start && match.index < range.end)
+        || isInsideInlineCode(markdown, match.index)
+      ) {
+        continue;
+      }
+      const source = match[2] || match[3] || '';
+      const sourceToken = match[2] ? `<${source}>` : source;
+      const sourceTokenOffset = match[0].indexOf(sourceToken, match[0].indexOf('](') + 2);
+      const sourceOffset = sourceTokenOffset + (match[2] ? 1 : 0);
+
+      images.push({
+        alt: match[1],
+        source,
+        sourceStart: match.index + sourceOffset,
+        sourceEnd: match.index + sourceOffset + source.length
+      });
+    }
+
+    return images;
+  };
+
+  const replaceMarkdownImageSource = (markdown, previousSource, nextSource) => {
+    const references = scanMarkdownImages(markdown)
+      .filter((image) => image.source === previousSource)
+      .sort((left, right) => right.sourceStart - left.sourceStart);
+    let result = markdown;
+
+    references.forEach((reference) => {
+      result = result.slice(0, reference.sourceStart)
+        + nextSource
+        + result.slice(reference.sourceEnd);
+    });
+
+    return result;
+  };
+
+  const normalizedFetchSource = (source) => source.replace(/\\([\\()])/g, '$1');
 
   const slugifyDraft = (value) => {
     const slug = String(value || '')
@@ -184,6 +279,8 @@
   let drafts = [];
   let activeDraftId = null;
   let currentAssets = [];
+  let localizationFailures = new Map();
+  const localizationPending = new Set();
   let saveTimer = null;
   let assetStorageAvailable = true;
   let dragDepth = 0;
@@ -204,6 +301,7 @@
       tags: 'digital-design, systemverilog, verilog',
       excerpt: '记录一个具体问题、核心结论和后续复盘方向。',
       body: defaultDraftBody,
+      imageFailures: {},
       createdAt: now,
       updatedAt: now,
       ...overrides
@@ -277,6 +375,31 @@
     elements.stats.textContent = `${characterCount} 字 · ${lineCount} 行`;
   };
 
+  const fallbackLocalizationReason = (source) => {
+    if (/^(?:file:|[a-zA-Z]:[\\/]|\.{0,2}[\\/])/.test(source)) {
+      return '浏览器无法直接读取本地文件路径';
+    }
+    if (source.startsWith('/images/posts/')) return '浏览器中缺少对应的本地图片资源';
+    return '图片尚未本地化，可重新粘贴以再次尝试';
+  };
+
+  const renderLocalizationFailureList = (failures) => {
+    elements.localizationFailures.innerHTML = '';
+    elements.localizationAlert.hidden = failures.size === 0;
+    elements.localizationTitle.textContent = `${failures.size} 张图片未能本地化`;
+
+    failures.forEach((reason, source) => {
+      const item = document.createElement('li');
+      const sourceLabel = document.createElement('code');
+      sourceLabel.textContent = source;
+      sourceLabel.title = source;
+      const reasonLabel = document.createElement('span');
+      reasonLabel.textContent = reason;
+      item.append(sourceLabel, reasonLabel);
+      elements.localizationFailures.appendChild(item);
+    });
+  };
+
   const renderPreview = () => {
     const body = elements.body.value;
     let html;
@@ -298,8 +421,14 @@
 
     const slug = slugifyDraft(elements.slug.value);
     const assetsByPath = new Map(currentAssets.map((asset) => [assetPublicPath(asset, slug), asset]));
+    const bodyImageSources = new Set(scanMarkdownImages(body).map((image) => image.source));
+    const displayedFailures = new Map();
     const template = document.createElement('template');
     template.innerHTML = html;
+
+    Array.from(localizationFailures.keys()).forEach((source) => {
+      if (!bodyImageSources.has(source)) localizationFailures.delete(source);
+    });
 
     template.content.querySelectorAll('img').forEach((image) => {
       const source = image.getAttribute('src') || '';
@@ -311,7 +440,20 @@
       } else if (source.startsWith('/images/posts/')) {
         image.removeAttribute('src');
         image.classList.add('is-missing-asset');
-        image.title = '当前浏览器中未找到这张图片';
+        const reason = localizationFailures.get(source) || fallbackLocalizationReason(source);
+        image.title = reason;
+        displayedFailures.set(source, reason);
+      } else if (localizationPending.has(source)) {
+        image.classList.add('is-localization-pending');
+        image.title = '正在抓取并本地化这张图片';
+      } else {
+        const reason = localizationFailures.get(source) || fallbackLocalizationReason(source);
+        if (/^(?:https?:|data:image\/|blob:|file:|[a-zA-Z]:[\\/]|\.{0,2}[\\/])/.test(source)) {
+          image.classList.add('is-localization-failed');
+          image.title = reason;
+          displayedFailures.set(source, reason);
+          image.removeAttribute('src');
+        }
       }
     });
 
@@ -321,6 +463,7 @@
     });
 
     elements.preview.replaceChildren(template.content);
+    renderLocalizationFailureList(displayedFailures);
 
     if (typeof window.renderMathInElement === 'function') {
       try {
@@ -372,6 +515,11 @@
     activeDraft.tags = elements.tags.value.trim();
     activeDraft.excerpt = draftData.excerpt;
     activeDraft.body = draftData.body;
+    const referencedSources = new Set(scanMarkdownImages(draftData.body).map((image) => image.source));
+    activeDraft.imageFailures = Object.fromEntries(
+      Array.from(localizationFailures.entries())
+        .filter(([source]) => referencedSources.has(source) && source.length < 2048)
+    );
     activeDraft.updatedAt = new Date().toISOString();
 
     const stored = writeDrafts();
@@ -503,6 +651,8 @@
     elements.tags.value = draft.tags || '';
     elements.excerpt.value = draft.excerpt || '';
     elements.body.value = draft.body || '';
+    localizationFailures = new Map(Object.entries(draft.imageFailures || {}));
+    localizationPending.clear();
     syncDraft('已载入');
   };
 
@@ -660,6 +810,147 @@
       .slice(0, 14);
     const suffix = Math.random().toString(36).slice(2, 7);
     return `${base}-${stamp}-${suffix}.${fileExtension(file)}`;
+  };
+
+  const imageFileNameFromSource = (source, alt, mimeType) => {
+    let sourceName = '';
+    try {
+      if (/^https?:/i.test(source)) {
+        const pathname = new URL(source).pathname;
+        sourceName = decodeURIComponent(pathname.slice(pathname.lastIndexOf('/') + 1));
+      }
+    } catch (error) {}
+
+    const fallbackBase = String(alt || 'image')
+      .replace(/[^a-z0-9\u4e00-\u9fa5]+/gi, '-')
+      .replace(/^-+|-+$/g, '') || 'image';
+    const extension = {
+      'image/png': 'png',
+      'image/jpeg': 'jpg',
+      'image/webp': 'webp',
+      'image/gif': 'gif'
+    }[mimeType] || 'img';
+
+    return sourceName && /\.[a-z0-9]{2,5}$/i.test(sourceName)
+      ? sourceName
+      : `${fallbackBase}.${extension}`;
+  };
+
+  const inferredImageType = (source, responseType) => {
+    const normalizedType = String(responseType || '').split(';')[0].toLowerCase();
+    if (ALLOWED_IMAGE_TYPES.has(normalizedType)) return normalizedType;
+
+    const cleanSource = source.split(/[?#]/)[0].toLowerCase();
+    if (cleanSource.endsWith('.png')) return 'image/png';
+    if (cleanSource.endsWith('.jpg') || cleanSource.endsWith('.jpeg')) return 'image/jpeg';
+    if (cleanSource.endsWith('.webp')) return 'image/webp';
+    if (cleanSource.endsWith('.gif')) return 'image/gif';
+    return '';
+  };
+
+  const fetchImageAsFile = async (reference) => {
+    const originalSource = reference.source;
+    const source = normalizedFetchSource(originalSource);
+
+    if (/^(?:file:|[a-zA-Z]:[\\/]|\.{0,2}[\\/])/.test(source)) {
+      throw new Error('浏览器无法直接读取本地文件路径');
+    }
+    if (!/^(?:https?:|data:image\/|blob:)/i.test(source)) {
+      throw new Error('该图片地址不是可抓取的网络或 Base64 地址');
+    }
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), IMAGE_FETCH_TIMEOUT);
+
+    try {
+      const response = await fetch(source, {
+        signal: controller.signal,
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        cache: 'no-store'
+      });
+      if (!response.ok) throw new Error(`图片服务器返回 HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const mimeType = inferredImageType(source, blob.type);
+      if (!mimeType) throw new Error('下载内容不是受支持的图片格式');
+      if (blob.size > MAX_IMAGE_SIZE) throw new Error('图片超过 20 MiB');
+
+      return new File(
+        [blob],
+        imageFileNameFromSource(source, reference.alt, mimeType),
+        { type: mimeType }
+      );
+    } catch (error) {
+      if (error?.name === 'AbortError') throw new Error('图片抓取超过 15 秒');
+      if (error instanceof TypeError) {
+        throw new Error('图片服务器拒绝跨域访问（CORS）或网络不可用');
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  };
+
+  const localizePastedMarkdownImages = async (pastedMarkdown) => {
+    const references = scanMarkdownImages(pastedMarkdown);
+    const uniqueReferences = Array.from(
+      new Map(references.map((reference) => [reference.source, reference])).values()
+    ).filter((reference) => !reference.source.startsWith('/images/posts/'));
+    if (!uniqueReferences.length) return;
+
+    let localizedCount = 0;
+    let failedCount = 0;
+
+    for (const [index, reference] of uniqueReferences.entries()) {
+      setStatus(
+        `正在本地化图片 ${index + 1}/${uniqueReferences.length}…`,
+        'working'
+      );
+
+      try {
+        let asset = currentAssets.find((item) => item.originalSource === reference.source);
+        if (!asset) {
+          const file = await fetchImageAsFile(reference);
+          asset = {
+            id: createId('asset'),
+            draftId: activeDraftId,
+            filename: buildAssetFilename(file),
+            mimeType: file.type,
+            size: file.size,
+            createdAt: new Date().toISOString(),
+            originalSource: reference.source.length < 2048 ? reference.source : '',
+            blob: file
+          };
+          await assetStore.put(asset);
+          currentAssets.push(asset);
+        }
+
+        const localizedPath = assetPublicPath(asset);
+        elements.body.value = replaceMarkdownImageSource(
+          elements.body.value,
+          reference.source,
+          localizedPath
+        );
+        localizationFailures.delete(reference.source);
+        localizedCount += 1;
+      } catch (error) {
+        localizationFailures.set(
+          reference.source,
+          error?.message || '图片抓取失败，原链接已保留'
+        );
+        failedCount += 1;
+      } finally {
+        localizationPending.delete(reference.source);
+        syncDraft(`正在处理图片 ${index + 1}/${uniqueReferences.length}`);
+      }
+    }
+
+    await refreshAssets();
+    const message = failedCount
+      ? `已本地化 ${localizedCount} 张；${failedCount} 张失败，原链接已保留`
+      : `${localizedCount} 张图片已自动本地化`;
+    saveCurrentDraft(message);
   };
 
   const insertTextAtCursor = (text) => {
@@ -899,10 +1190,22 @@
     });
 
     elements.body.addEventListener('paste', (event) => {
+      const pastedText = event.clipboardData?.getData('text/plain') || '';
+      const pastedImageReferences = scanMarkdownImages(pastedText)
+        .filter((reference) => !reference.source.startsWith('/images/posts/'));
       const imageFiles = Array.from(event.clipboardData?.items || [])
         .filter((item) => item.kind === 'file' && ALLOWED_IMAGE_TYPES.has(item.type))
         .map((item) => item.getAsFile())
         .filter(Boolean);
+
+      if (pastedImageReferences.length) {
+        event.preventDefault();
+        pastedImageReferences.forEach((reference) => localizationPending.add(reference.source));
+        replaceSelection(pastedText);
+        void localizePastedMarkdownImages(pastedText);
+        return;
+      }
+
       if (!imageFiles.length) return;
       event.preventDefault();
       void handleImageFiles(imageFiles);
