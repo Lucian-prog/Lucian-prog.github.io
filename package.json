@@ -13,6 +13,7 @@
     "version": "8.1.2"
   },
   "dependencies": {
+    "dompurify": "3.4.12",
     "hexo": "^8.1.2",
     "hexo-generator-archive": "^2.0.0",
     "hexo-generator-category": "^2.0.0",
@@ -23,6 +24,8 @@
     "hexo-renderer-marked": "^6.0.0",
     "hexo-server": "^3.0.0",
     "hexo-wordcount": "^6.0.1",
-    "katex": "^0.16.47"
+    "jszip": "3.10.1",
+    "katex": "^0.16.47",
+    "marked": "16.4.2"
   }
 }

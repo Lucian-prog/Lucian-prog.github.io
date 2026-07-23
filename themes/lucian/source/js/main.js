@@ -420,7 +420,7 @@ const renderDraftMarkdown = (markdown) => {
   return html.join('\n');
 };
 
-if (editorPage) {
+if (editorPage && !window.LucianDraftEditorEnhanced) {
   const draftStorageKey = 'lucian-editor-drafts-v1';
   const activeDraftKey = 'lucian-editor-active-draft-v1';
   const titleInput = document.getElementById('draftTitle');

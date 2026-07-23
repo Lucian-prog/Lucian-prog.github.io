@@ -1660,8 +1660,8 @@ a.detail-tag:hover {
 
 .editor-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
   align-items: start;
 }
 
@@ -1720,6 +1720,324 @@ a.detail-tag:hover {
   align-content: start;
 }
 
+.editor-composer {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(360px, 0.96fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.composer-pane {
+  min-width: 0;
+}
+
+.composer-write-pane {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+}
+
+.markdown-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  overflow-x: visible;
+  padding: 8px;
+  border-bottom: 1px solid var(--border-color);
+  background:
+    linear-gradient(90deg, var(--accent-faint), transparent 30%),
+    var(--bg-card);
+}
+
+.markdown-toolbar button,
+.composer-tab,
+.asset-card-actions button {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  cursor: pointer;
+  font: inherit;
+}
+
+.markdown-toolbar button {
+  flex: 0 0 auto;
+  min-width: 34px;
+  min-height: 32px;
+  padding: 5px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+}
+
+.markdown-toolbar button:hover,
+.markdown-toolbar button:focus-visible {
+  background: var(--accent-soft);
+  color: var(--text-silver);
+  outline: none;
+}
+
+.markdown-toolbar .toolbar-image-button {
+  margin-left: auto;
+  padding-inline: 11px;
+  border: 1px solid color-mix(in srgb, var(--accent-red) 48%, var(--border-color));
+  color: var(--accent-red);
+}
+
+.toolbar-divider {
+  flex: 0 0 1px;
+  width: 1px;
+  height: 20px;
+  margin: 0 3px;
+  background: var(--border-color);
+}
+
+.markdown-editor-frame {
+  position: relative;
+  display: grid;
+}
+
+.editor-body-label {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 1;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.markdown-editor-frame textarea {
+  width: 100%;
+  min-height: 560px;
+  resize: vertical;
+  padding: 22px 18px;
+  border: 0;
+  background: var(--bg-base);
+  color: var(--text-main);
+  font: 0.92rem/1.72 'JetBrains Mono', 'Noto Sans SC', monospace;
+  outline: none;
+  tab-size: 2;
+}
+
+.markdown-editor-frame:focus-within {
+  box-shadow: inset 0 0 0 2px var(--accent-soft);
+}
+
+.image-drop-overlay {
+  position: absolute;
+  inset: 12px;
+  z-index: 3;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  border: 2px dashed var(--accent-red);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--bg-base) 90%, var(--accent-red));
+  color: var(--text-silver);
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.985);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.image-drop-overlay span {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.markdown-editor-frame.is-dragging .image-drop-overlay {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.composer-statusbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+}
+
+.composer-statusbar strong {
+  color: var(--accent-red);
+  font-weight: 700;
+}
+
+.composer-statusbar strong.is-error {
+  color: var(--syntax-deletion);
+}
+
+.composer-statusbar strong.is-working::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: editor-status-pulse 900ms ease-in-out infinite alternate;
+}
+
+@keyframes editor-status-pulse {
+  to {
+    opacity: 0.25;
+  }
+}
+
+.asset-shelf {
+  display: grid;
+  gap: 11px;
+  padding: 14px;
+  border-top: 1px solid var(--border-color);
+  background:
+    linear-gradient(135deg, var(--accent-faint), transparent 45%),
+    var(--bg-card);
+}
+
+.asset-shelf-header,
+.asset-shelf-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.asset-shelf-header > div:first-child {
+  display: grid;
+  gap: 2px;
+}
+
+.asset-shelf-header > div:first-child span {
+  color: var(--accent-red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.asset-shelf-header strong {
+  color: var(--text-silver);
+  font-size: 0.9rem;
+}
+
+.asset-shelf-actions > span {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+}
+
+.asset-shelf-actions .editor-button {
+  min-height: 32px;
+  padding: 5px 9px;
+  font-size: 0.78rem;
+}
+
+.asset-list {
+  display: grid;
+  grid-auto-columns: minmax(220px, 0.72fr);
+  grid-auto-flow: column;
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  padding-bottom: 3px;
+  scroll-snap-type: inline proximity;
+}
+
+.asset-card {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 9px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-base);
+  scroll-snap-align: start;
+}
+
+.asset-card > img {
+  grid-row: 1 / span 2;
+  width: 58px;
+  height: 58px;
+  border-radius: 6px;
+  background: var(--code-panel);
+  object-fit: cover;
+}
+
+.asset-card-details {
+  display: grid;
+  min-width: 0;
+  align-content: center;
+}
+
+.asset-card-details strong {
+  overflow: hidden;
+  color: var(--text-silver);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.asset-card-details span {
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.66rem;
+}
+
+.asset-card-actions {
+  display: flex;
+  gap: 3px;
+  grid-column: 2;
+}
+
+.asset-card-actions button {
+  padding: 3px 5px;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+}
+
+.asset-card-actions button:hover {
+  background: var(--accent-soft);
+  color: var(--text-silver);
+}
+
+.asset-card-actions button.is-danger:hover {
+  color: var(--syntax-deletion);
+}
+
+.asset-empty {
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px dashed var(--border-color);
+  border-radius: 7px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.asset-empty[hidden] {
+  display: none;
+}
+
+.preview-heading {
+  min-height: 38px;
+  padding: 0 4px;
+}
+
 .editor-output-header {
   display: flex;
   align-items: center;
@@ -1737,13 +2055,64 @@ a.detail-tag:hover {
 }
 
 .editor-preview {
-  min-height: 300px;
-  max-height: 620px;
+  min-height: 640px;
+  max-height: 820px;
   overflow: auto;
   padding: 18px;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--bg-base);
+}
+
+.editor-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25em auto;
+  border-radius: 8px;
+}
+
+.editor-preview img.is-missing-asset {
+  min-height: 96px;
+  border: 1px dashed var(--syntax-deletion);
+  background: var(--accent-faint);
+}
+
+.editor-render-error {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--syntax-deletion);
+  background: var(--accent-faint);
+  color: var(--text-main);
+  font-size: 0.84rem;
+}
+
+.markdown-output-details {
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+}
+
+.markdown-output-details summary {
+  padding: 10px 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.markdown-output-details[open] summary {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.markdown-output-details #draftMarkdown {
+  border: 0;
+  border-radius: 0;
+}
+
+.composer-tabs {
+  display: none;
 }
 
 .editor-tabs {
@@ -2195,6 +2564,10 @@ body.has-editor-workspace #live2d-widget {
   display: none !important;
 }
 
+body.has-editor-workspace .container {
+  max-width: 1540px;
+}
+
 @media (max-width: 768px) {
   .top-nav {
     padding: 0 20px;
@@ -2311,8 +2684,56 @@ body.has-editor-workspace #live2d-widget {
   .editor-shell,
   .editor-workspace,
   .editor-form,
+  .editor-composer,
   .progress-manager-grid {
     grid-template-columns: 1fr;
+  }
+
+  .composer-tabs {
+    display: flex;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-base);
+  }
+
+  .composer-tab {
+    flex: 1;
+    min-height: 36px;
+    color: var(--text-muted);
+    font-size: 0.86rem;
+    font-weight: 700;
+  }
+
+  .composer-tab.is-active {
+    background: var(--accent-soft);
+    color: var(--text-silver);
+  }
+
+  .editor-composer .composer-pane {
+    display: none;
+  }
+
+  .editor-composer .composer-pane.is-active {
+    display: grid;
+  }
+
+  .markdown-editor-frame textarea {
+    min-height: 480px;
+  }
+
+  .editor-preview {
+    min-height: 480px;
+    max-height: none;
+  }
+
+  .asset-shelf-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .asset-shelf-actions {
+    width: 100%;
   }
 
   .progress-chapter-header {
@@ -2494,6 +2915,10 @@ body.has-editor-workspace #live2d-widget {
 :root[data-theme^='claude-'] .container {
   max-width: 1120px;
   padding: 100px 24px 52px;
+}
+
+:root[data-theme^='claude-'] body.has-editor-workspace .container {
+  max-width: 1540px;
 }
 
 :root[data-theme^='claude-'] .portal-card {
