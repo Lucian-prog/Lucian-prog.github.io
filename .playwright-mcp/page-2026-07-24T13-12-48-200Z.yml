@@ -1,0 +1,343 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e2]: 女仆整理时间轴中...
+  - navigation [ref=f3e6]:
+    - link "LUCIAN_NOTES" [ref=f3e7] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f3e8]:
+      - button "打开全局搜索" [ref=f3e9] [cursor=pointer]
+      - button "切换主题配色" [ref=f3e14] [cursor=pointer]
+      - generic [ref=f3e17]:
+        - link "首页" [ref=f3e18] [cursor=pointer]:
+          - /url: /
+        - link "归档" [ref=f3e19] [cursor=pointer]:
+          - /url: /archives/
+        - link "分类" [ref=f3e20] [cursor=pointer]:
+          - /url: /categories/
+        - link "标签" [ref=f3e21] [cursor=pointer]:
+          - /url: /tags/
+        - link "写作" [ref=f3e22] [cursor=pointer]:
+          - /url: /editor/
+        - link "关于" [ref=f3e23] [cursor=pointer]:
+          - /url: /about/
+        - link "友链" [ref=f3e24] [cursor=pointer]:
+          - /url: /friend/
+        - link "GitHub" [ref=f3e25] [cursor=pointer]:
+          - /url: https://github.com/Lucian-prog
+  - main [ref=f3e26]:
+    - generic [ref=f3e27]:
+      - article [ref=f3e28]:
+        - generic [ref=f3e29]:
+          - generic [ref=f3e30]:
+            - generic [ref=f3e31]: 2026-07-07
+            - generic [ref=f3e32]: Reading Notes
+            - generic [ref=f3e33]: 940 Words
+            - generic [ref=f3e34]: 3 Min Read
+          - heading "从 Verilog 到 SystemVerilog：第 4 章硬件描述语言笔记" [level=1] [ref=f3e35]
+          - generic [ref=f3e36]:
+            - link "digital-design" [ref=f3e37] [cursor=pointer]:
+              - /url: /tags/digital-design/
+            - link "systemverilog" [ref=f3e38] [cursor=pointer]:
+              - /url: /tags/systemverilog/
+            - link "verilog" [ref=f3e39] [cursor=pointer]:
+              - /url: /tags/verilog/
+            - link "computer-architecture" [ref=f3e40] [cursor=pointer]:
+              - /url: /tags/computer-architecture/
+        - generic [ref=f3e41]:
+          - heading [level=2] [ref=f3e42]:
+            - link "从 reg/wire 到 logic":
+              - /url: "#从-reg-wire-到-logic"
+            - text: 从
+            - code [ref=f3e43]: reg/wire
+            - text: 到
+            - code [ref=f3e44]: logic
+          - paragraph [ref=f3e45]:
+            - text: 传统 Verilog 中，
+            - code [ref=f3e46]: reg
+            - text: 和
+            - code [ref=f3e47]: wire
+            - text: 很容易让初学者误解。
+            - code [ref=f3e48]: reg
+            - text: 并不一定综合成寄存器，它只是表示这个信号可以在
+            - code [ref=f3e49]: always
+            - text: 块中赋值。它到底是组合逻辑输出、锁存器还是触发器，要看具体写法。
+          - paragraph [ref=f3e50]:
+            - text: SystemVerilog 引入了
+            - code [ref=f3e51]: logic
+            - text: ，让大多数单驱动信号都可以统一声明：
+          - figure [ref=f3e52]:
+            - generic [ref=f3e53]:
+              - generic [ref=f3e54]: systemverilog
+              - button "Copy" [ref=f3e55] [cursor=pointer]
+            - table [ref=f3e56]:
+              - rowgroup [ref=f3e57]:
+                - row [ref=f3e58]:
+                  - cell [ref=f3e59]:
+                    - generic [ref=f3e60]: "123456789"
+                  - cell "module and2 ( input logic a_i, input logic b_i, output logic y_o ); assign y_o = a_i & b_i; endmodule" [ref=f3e61]:
+                    - generic [ref=f3e62]:
+                      - generic [ref=f3e63]: module and2 (
+                      - generic [ref=f3e64]: input logic a_i,
+                      - generic [ref=f3e65]: input logic b_i,
+                      - generic [ref=f3e66]: output logic y_o
+                      - text: );
+                      - generic [ref=f3e67]: assign y_o = a_i & b_i;
+                      - generic [ref=f3e68]: endmodule
+          - paragraph [ref=f3e69]:
+            - text: 这样写的好处是语义更清楚，不需要在
+            - code [ref=f3e70]: reg
+            - text: 和
+            - code [ref=f3e71]: wire
+            - text: 之间反复纠结。不过
+            - code [ref=f3e72]: logic
+            - text: 不是万能的。如果是三态总线或多驱动信号，仍然需要使用
+            - code [ref=f3e73]: tri
+            - text: 、
+            - code [ref=f3e74]: wire
+            - text: 这类 net 类型。也就是说，
+            - code [ref=f3e75]: logic
+            - text: 适合单驱动 RTL 信号，但不能掩盖硬件连接关系本身。
+          - heading [level=2] [ref=f3e76]:
+            - link "用 always_ff 和 always_comb 表达硬件意图":
+              - /url: "#用-always-ff-和-always-comb-表达硬件意图"
+            - text: 用
+            - code [ref=f3e77]: always_ff
+            - text: 和
+            - code [ref=f3e78]: always_comb
+            - text: 表达硬件意图
+          - paragraph [ref=f3e79]: Verilog 中常见的组合逻辑写法是：
+          - figure [ref=f3e80]:
+            - generic [ref=f3e81]:
+              - generic [ref=f3e82]: verilog
+              - button "Copy" [ref=f3e83] [cursor=pointer]
+            - table [ref=f3e84]:
+              - rowgroup [ref=f3e85]:
+                - row [ref=f3e86]:
+                  - cell [ref=f3e87]:
+                    - generic [ref=f3e88]: "123"
+                  - cell "always @(*) begin y = a & b; end" [ref=f3e89]:
+                    - generic [ref=f3e90]:
+                      - generic [ref=f3e91]: always @(*) begin
+                      - text: y = a & b;
+                      - generic [ref=f3e92]: end
+          - paragraph [ref=f3e93]: SystemVerilog 中更推荐：
+          - figure [ref=f3e94]:
+            - generic [ref=f3e95]:
+              - generic [ref=f3e96]: systemverilog
+              - button "Copy" [ref=f3e97] [cursor=pointer]
+            - table [ref=f3e98]:
+              - rowgroup [ref=f3e99]:
+                - row [ref=f3e100]:
+                  - cell [ref=f3e101]:
+                    - generic [ref=f3e102]: "123"
+                  - cell "always_comb begin y_o = a_i & b_i; end" [ref=f3e103]:
+                    - generic [ref=f3e104]:
+                      - generic [ref=f3e105]: always_comb begin
+                      - text: y_o = a_i & b_i;
+                      - generic [ref=f3e106]: end
+          - paragraph [ref=f3e107]: 对于时序逻辑，则使用：
+          - figure [ref=f3e108]:
+            - generic [ref=f3e109]:
+              - generic [ref=f3e110]: systemverilog
+              - button "Copy" [ref=f3e111] [cursor=pointer]
+            - table [ref=f3e112]:
+              - rowgroup [ref=f3e113]:
+                - row [ref=f3e114]:
+                  - cell [ref=f3e115]:
+                    - generic [ref=f3e116]: "1234567"
+                  - cell "always_ff @(posedge clk_i or negedge rst_n_i) begin if (!rst_n_i) begin q_o <= '0; end else begin q_o <= d_i; end end" [ref=f3e117]:
+                    - generic [ref=f3e118]:
+                      - generic [ref=f3e119]: always_ff @(posedge clk_i or negedge rst_n_i) begin
+                      - generic [ref=f3e120]: if (!rst_n_i) begin
+                      - generic [ref=f3e121]: q_o <= '0;
+                      - generic [ref=f3e122]: end else begin
+                      - text: q_o <= d_i;
+                      - generic [ref=f3e123]: end
+                      - generic [ref=f3e124]: end
+          - paragraph [ref=f3e125]: 这两个关键字的意义在于，它们把设计者的意图写进了代码：这里应该是组合逻辑，那里应该是触发器。工具也能据此检查一些不合理写法。
+          - paragraph [ref=f3e126]: 对我来说，这是 SystemVerilog 相比 Verilog 很实用的一点。它不是改变了硬件结构，而是让代码和硬件结构之间的对应关系更明确。
+          - heading "阻塞赋值和非阻塞赋值仍然是重点阻塞赋值和非阻塞赋值仍然是重点" [level=2] [ref=f3e127]:
+            - link "阻塞赋值和非阻塞赋值仍然是重点":
+              - /url: "#阻塞赋值和非阻塞赋值仍然是重点"
+            - text: 阻塞赋值和非阻塞赋值仍然是重点
+          - paragraph [ref=f3e128]: 从 Verilog 迁移到 SystemVerilog 后，阻塞赋值和非阻塞赋值的规则并没有消失：
+          - list [ref=f3e129]:
+            - listitem [ref=f3e130]:
+              - text: 组合逻辑中通常使用阻塞赋值
+              - code [ref=f3e131]: =
+              - text: ；
+            - listitem [ref=f3e132]:
+              - text: 时序逻辑中通常使用非阻塞赋值
+              - code [ref=f3e133]: <=
+              - text: 。
+          - paragraph [ref=f3e134]: 例如两个串联触发器应该写成：
+          - figure [ref=f3e135]:
+            - generic [ref=f3e136]:
+              - generic [ref=f3e137]: systemverilog
+              - button "Copy" [ref=f3e138] [cursor=pointer]
+            - table [ref=f3e139]:
+              - rowgroup [ref=f3e140]:
+                - row [ref=f3e141]:
+                  - cell [ref=f3e142]:
+                    - generic [ref=f3e143]: "123456789"
+                  - cell "always_ff @(posedge clk_i or negedge rst_n_i) begin if (!rst_n_i) begin n1_q <= 1'b0; q_o <= 1'b0; end else begin n1_q <= d_i; q_o <= n1_q; end end" [ref=f3e144]:
+                    - generic [ref=f3e145]:
+                      - generic [ref=f3e146]: always_ff @(posedge clk_i or negedge rst_n_i) begin
+                      - generic [ref=f3e147]: if (!rst_n_i) begin
+                      - generic [ref=f3e148]: n1_q <= 1'b0;
+                      - generic [ref=f3e149]: q_o <= 1'b0;
+                      - generic [ref=f3e150]: end else begin
+                      - text: n1_q <= d_i; q_o <= n1_q;
+                      - generic [ref=f3e151]: end
+                      - generic [ref=f3e152]: end
+          - paragraph [ref=f3e153]:
+            - text: 这里
+            - code [ref=f3e154]: q_o
+            - text: 采到的是上一拍的
+            - code [ref=f3e155]: n1_q
+            - text: ，硬件上对应两个背靠背的触发器。如果在时序逻辑里随意使用阻塞赋值，仿真结果可能和实际想表达的寄存器级结构不一致。
+          - heading "FSM 更适合用枚举状态FSM 更适合用枚举状态" [level=2] [ref=f3e156]:
+            - link "FSM 更适合用枚举状态":
+              - /url: "#FSM-更适合用枚举状态"
+            - text: FSM 更适合用枚举状态
+          - paragraph [ref=f3e157]:
+            - text: 以前写 Verilog 状态机时，我常用
+            - code [ref=f3e158]: localparam
+            - text: 定义状态：
+          - figure [ref=f3e159]:
+            - generic [ref=f3e160]:
+              - generic [ref=f3e161]: verilog
+              - button "Copy" [ref=f3e162] [cursor=pointer]
+            - table [ref=f3e163]:
+              - rowgroup [ref=f3e164]:
+                - row [ref=f3e165]:
+                  - cell [ref=f3e166]:
+                    - generic [ref=f3e167]: "123"
+                  - cell "localparam S_IDLE = 2'd0; localparam S_RUN = 2'd1; localparam S_DONE = 2'd2;" [ref=f3e168]:
+                    - generic [ref=f3e169]:
+                      - generic [ref=f3e170]: localparam S_IDLE = 2'd0;
+                      - generic [ref=f3e171]: localparam S_RUN = 2'd1;
+                      - generic [ref=f3e172]: localparam S_DONE = 2'd2;
+          - paragraph [ref=f3e173]: SystemVerilog 可以用枚举类型：
+          - figure [ref=f3e174]:
+            - generic [ref=f3e175]:
+              - generic [ref=f3e176]: systemverilog
+              - button "Copy" [ref=f3e177] [cursor=pointer]
+            - table [ref=f3e178]:
+              - rowgroup [ref=f3e179]:
+                - row [ref=f3e180]:
+                  - cell [ref=f3e181]:
+                    - generic [ref=f3e182]: "1234567"
+                  - 'cell "typedef enum logic [1:0] { S_IDLE, S_RUN, S_DONE } state_t; state_t state_q, state_d;" [ref=f3e183]':
+                    - generic [ref=f3e184]:
+                      - generic [ref=f3e185]: "typedef enum logic [1:0] {"
+                      - text: "S_IDLE, S_RUN, S_DONE} state_t;state_t state_q, state_d;"
+          - paragraph [ref=f3e186]:
+            - text: 这种写法更接近“状态机”的语义。
+            - code [ref=f3e187]: state_q
+            - text: 表示当前状态寄存器，
+            - code [ref=f3e188]: state_d
+            - text: 表示下一状态组合逻辑。配合三段式 FSM，代码结构会更清楚：
+          - list [ref=f3e189]:
+            - listitem [ref=f3e190]:
+              - paragraph [ref=f3e191]: 第一段：状态寄存器：
+              - figure [ref=f3e192]:
+                - generic [ref=f3e193]:
+                  - generic [ref=f3e194]: systemverilog
+                  - button "Copy" [ref=f3e195] [cursor=pointer]
+                - table [ref=f3e196]:
+                  - rowgroup [ref=f3e197]:
+                    - row [ref=f3e198]:
+                      - cell [ref=f3e199]:
+                        - generic [ref=f3e200]: "1234567"
+                      - cell "always_ff @(posedge clk_i or negedge rst_n_i) begin if (!rst_n_i) begin state_q <= S_IDLE; end else begin state_q <= state_d; end end" [ref=f3e201]:
+                        - generic [ref=f3e202]:
+                          - generic [ref=f3e203]: always_ff @(posedge clk_i or negedge rst_n_i) begin
+                          - generic [ref=f3e204]: if (!rst_n_i) begin
+                          - text: state_q <= S_IDLE;
+                          - generic [ref=f3e205]: end else begin
+                          - text: state_q <= state_d;
+                          - generic [ref=f3e206]: end
+                          - generic [ref=f3e207]: end
+            - listitem [ref=f3e208]:
+              - paragraph [ref=f3e209]: 第二段：下一状态逻辑：
+              - figure [ref=f3e210]:
+                - generic [ref=f3e211]:
+                  - generic [ref=f3e212]: systemverilog
+                  - button "Copy" [ref=f3e213] [cursor=pointer]
+                - table [ref=f3e214]:
+                  - rowgroup [ref=f3e215]:
+                    - row [ref=f3e216]:
+                      - cell [ref=f3e217]:
+                        - generic [ref=f3e218]: "12345678910111213141516171819202122232425"
+                      - 'cell "always_comb begin state_d = state_q; unique case (state_q) S_IDLE: begin if (start_i) begin state_d = S_BUSY; end end S_BUSY: begin if (done_i) begin state_d = S_DONE; end end S_DONE: begin state_d = S_IDLE; end default: begin state_d = S_IDLE; end endcase end" [ref=f3e219]':
+                        - generic [ref=f3e220]:
+                          - generic [ref=f3e221]: always_comb begin
+                          - text: state_d = state_q;
+                          - generic [ref=f3e222]: unique case (state_q)
+                          - generic [ref=f3e223]: "S_IDLE: begin"
+                          - generic [ref=f3e224]: if (start_i) begin
+                          - text: state_d = S_BUSY;
+                          - generic [ref=f3e225]: end
+                          - generic [ref=f3e226]: end
+                          - generic [ref=f3e227]: "S_BUSY: begin"
+                          - generic [ref=f3e228]: if (done_i) begin
+                          - text: state_d = S_DONE;
+                          - generic [ref=f3e229]: end
+                          - generic [ref=f3e230]: end
+                          - generic [ref=f3e231]: "S_DONE: begin"
+                          - text: state_d = S_IDLE;
+                          - generic [ref=f3e232]: end
+                          - generic [ref=f3e233]: "default: begin"
+                          - text: state_d = S_IDLE;
+                          - generic [ref=f3e234]: end
+                          - generic [ref=f3e235]: endcase
+                          - generic [ref=f3e236]: end
+            - listitem [ref=f3e237]:
+              - paragraph [ref=f3e238]: 第三段：输出逻辑：
+              - figure [ref=f3e239]:
+                - generic [ref=f3e240]:
+                  - generic [ref=f3e241]: verilog
+                  - button "Copy" [ref=f3e242] [cursor=pointer]
+                - table [ref=f3e243]:
+                  - rowgroup [ref=f3e244]:
+                    - row [ref=f3e245]:
+                      - cell [ref=f3e246]
+                      - cell "assign busy_o = (state_q == S_BUSY);" [ref=f3e248]
+          - paragraph [ref=f3e251]: 这对后续调试也有帮助。看波形时，状态名比单纯的二进制编码更直观。
+          - heading "我接下来的迁移思路我接下来的迁移思路" [level=2] [ref=f3e252]:
+            - link "我接下来的迁移思路":
+              - /url: "#我接下来的迁移思路"
+            - text: 我接下来的迁移思路
+          - paragraph [ref=f3e253]: 这章读完后，我不会立刻把所有 Verilog 模块都改成 SystemVerilog。更合理的做法是逐步迁移：
+          - list [ref=f3e254]:
+            - listitem [ref=f3e255]:
+              - text: 新写的小模块优先使用
+              - code [ref=f3e256]: .sv
+              - text: 。
+            - listitem [ref=f3e257]: 组合逻辑和简单寄存器模块先迁移。
+            - listitem [ref=f3e258]: FIFO、CDC、总线协议这类模块暂时保持谨慎。
+            - listitem [ref=f3e259]: 每迁移一个模块，都保留 testbench 验证原有行为。
+            - listitem [ref=f3e260]: 重点关注综合 warning，尤其是 latch、多驱动、位宽截断和未复位寄存器。
+          - paragraph [ref=f3e261]: SystemVerilog 的学习不应该停留在语法层面。对 RTL 设计来说，更重要的是它能否帮助我写出结构清晰、时序明确、便于验证的硬件。
+      - complementary "文章目录" [ref=f3e262]:
+        - generic [ref=f3e263]: On This Page
+        - navigation [ref=f3e264]:
+          - link "从 reg/wire 到 logic" [ref=f3e265] [cursor=pointer]:
+            - /url: "#从-reg-wire-到-logic"
+          - link "用 always_ff 和 always_comb 表达硬件意图" [ref=f3e266] [cursor=pointer]:
+            - /url: "#用-always-ff-和-always-comb-表达硬件意图"
+          - link "阻塞赋值和非阻塞赋值仍然是重点" [ref=f3e267] [cursor=pointer]:
+            - /url: "#阻塞赋值和非阻塞赋值仍然是重点"
+          - link "FSM 更适合用枚举状态" [ref=f3e268] [cursor=pointer]:
+            - /url: "#FSM-更适合用枚举状态"
+          - link "我接下来的迁移思路" [ref=f3e269] [cursor=pointer]:
+            - /url: "#我接下来的迁移思路"
+      - generic [ref=f3e270]:
+        - heading "Comments" [level=2] [ref=f3e271]
+        - generic [ref=f3e272]: 评论由 GitHub Issues 驱动。首次使用时可能需要安装或授权 utterances。
+        - generic:
+          - iframe
+  - contentinfo [ref=f3e273]:
+    - generic [ref=f3e274]: © 2026 Lucian
+    - generic [ref=f3e275]: Powered by Hexo · Theme Lucian
+  - button "返回顶部"

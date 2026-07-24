@@ -397,6 +397,16 @@ a {
   transition: opacity 0.56s ease, transform 0.56s ease, border-color 0.24s ease, box-shadow 0.24s ease;
 }
 
+/* 卡片入场完成后，把 transform/transition 交还给卡片自身的弹性 hover 规则 */
+.reveal.is-visible.topic-card,
+.reveal.is-visible.article-card,
+.reveal.is-visible.project-chip {
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.24s ease,
+    box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.24s ease;
+}
+
 .reveal.is-visible {
   opacity: 1;
   transform: translateY(0);
@@ -759,6 +769,13 @@ a {
   padding: 4px;
   border: 1px dashed var(--text-muted);
   border-radius: 50%;
+  /* 头像呼吸光环，呼应"女仆整理时间轴"的人设 */
+  animation: avatar-halo 4.2s ease-in-out infinite;
+}
+
+@keyframes avatar-halo {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft), 0 0 22px var(--accent-soft); }
+  50% { box-shadow: 0 0 0 5px var(--accent-faint), 0 0 34px var(--accent-soft); }
 }
 
 .avatar {
@@ -781,7 +798,9 @@ a {
   margin: 0 0 12px;
   color: var(--accent-red);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.86rem;
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .site-desc-cn {
@@ -843,9 +862,43 @@ a {
 .article-card,
 .project-chip,
 .learning-thread {
+  position: relative;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.24s ease,
+    box-shadow 0.28s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.24s ease;
+}
+
+/* hover 时从左缘滑入一条 accent 指示条，呼应技术笔记的"终端感"。
+   仅用于深色立体质感主题；claude-* 主题走扁平纸张风，下面会显式关闭 */
+.topic-card::before,
+.article-card::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent-red);
+  opacity: 0;
+  transform: scaleY(0.4);
+  transition: opacity 0.24s ease, transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.topic-card:hover::before,
+.article-card:hover::before {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* claude-* 扁平主题：关闭 accent 指示条，保留其原有的纸张 hover 手感 */
+:root[data-theme^='claude-'] .topic-card::before,
+:root[data-theme^='claude-'] .article-card::before {
+  content: none;
 }
 
 .topic-card {
@@ -991,8 +1044,15 @@ a.detail-tag:hover {
 }
 
 .article-card:hover {
+  transform: translateY(-3px);
   border-color: var(--text-muted);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.22);
+}
+
+/* claude-* 扁平主题不使用上浮，保持纸张般的稳定 */
+:root[data-theme^='claude-'] .article-card:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .article-meta {
@@ -1121,8 +1181,14 @@ a.detail-tag:hover {
 }
 
 .post-content {
+  max-width: 70ch;
   color: var(--text-main);
-  font-size: 1rem;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.post-content p {
+  margin-bottom: 1.1em;
 }
 
 .post-content .katex-display {
@@ -1135,7 +1201,8 @@ a.detail-tag:hover {
 .post-content h3 {
   color: var(--text-silver);
   scroll-margin-top: 84px;
-  margin-top: 2em;
+  margin-top: 2.2em;
+  margin-bottom: 0.9em;
 }
 
 .post-toc {
@@ -1193,11 +1260,19 @@ a.detail-tag:hover {
 }
 
 .post-content code {
-  padding: 0.12em 0.35em;
+  padding: 0.15em 0.4em;
   border-radius: 4px;
   background: var(--code-bg);
   color: var(--code-text);
   font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9em;
+}
+
+/* 代码区选中文本用主题 accent 色高亮，读代码片段更聚焦 */
+.post-content pre ::selection,
+.post-content figure.highlight ::selection {
+  background: color-mix(in srgb, var(--accent-red) 32%, transparent);
+  color: var(--text-silver);
 }
 
 .post-content pre {
@@ -1210,10 +1285,16 @@ a.detail-tag:hover {
 
 .post-content figure.highlight {
   overflow: hidden;
-  margin: 1.4em 0;
+  margin: 1.6em 0;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--code-panel);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.post-content figure.highlight:hover {
+  border-color: color-mix(in srgb, var(--accent-red) 40%, var(--border-color));
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
 }
 
 .post-content figure.highlight table {
@@ -1223,9 +1304,12 @@ a.detail-tag:hover {
 
 .post-content figure.highlight .gutter {
   width: 1%;
-  padding: 0 10px;
+  padding: 0 12px;
   border-right: 1px solid var(--border-color);
   color: var(--text-muted);
+  opacity: 0.55;
+  background: color-mix(in srgb, var(--code-bg) 60%, transparent);
+  font-size: 0.86em;
   user-select: none;
 }
 
@@ -2874,6 +2958,10 @@ body.has-editor-workspace .container {
   .reveal {
     opacity: 1;
     transform: none;
+  }
+
+  .avatar-container {
+    animation: none;
   }
 }
 
