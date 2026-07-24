@@ -46,8 +46,10 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/vendor/katex/katex.min.css">
+  <%# 精简字重：英文/代码/中文各保留实际用到的字重，砍掉冗余，显著减小字体下载体积 %>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <%# KaTeX CSS 仅在文章 front-matter 声明 math: true 时注入，避免全站加载 %>
+  <% if (page.math) { %><link rel="stylesheet" href="/vendor/katex/katex.min.css"><% } %>
   <%- css('/css/style.css') %>
 </head>
 <body>

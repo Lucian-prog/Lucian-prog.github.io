@@ -1,6 +1,7 @@
 ---
 title: "体系结构与 RISC-V 汇编基础：读《数字设计和计算机体系结构》第 6 章的笔记1"
 date: 2026-07-13 22:10:27
+math: true
 categories:
   - "Reading Notes"
 tags:

@@ -1,6 +1,7 @@
 ---
 title: "从程序流程到机器语言：读《数字设计和计算机体系结构》第 6 章的笔记2"
 date: 2026-07-17 01:15:30
+math: true
 categories:
   - "Reading Notes"
 tags:

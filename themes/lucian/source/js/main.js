@@ -1264,11 +1264,22 @@ const hideLoader = () => {
   loader?.classList.add('is-hidden');
 };
 
+// 首屏遮罩只在内容真正就绪后淡出，不设强制等待时长；偏好减少动效时直接跳过
 if (loader && !reduceMotion) {
-  window.addEventListener('load', () => {
-    window.setTimeout(hideLoader, 320);
-  });
-  window.setTimeout(hideLoader, 1400);
+  let loaderHidden = false;
+  const hideLoaderOnce = () => {
+    if (loaderHidden) return;
+    loaderHidden = true;
+    hideLoader();
+  };
+
+  if (document.readyState === 'complete') {
+    hideLoaderOnce();
+  } else {
+    window.addEventListener('load', hideLoaderOnce, { once: true });
+    // 兜底：某些资源挂起导致 load 迟迟不触发时，最长也只在 ~1s 内释放，避免长时间白屏
+    window.setTimeout(hideLoaderOnce, 1000);
+  }
 } else {
   hideLoader();
 }
