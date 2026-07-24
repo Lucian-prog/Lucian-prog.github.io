@@ -102,7 +102,6 @@ lucian:
       url: https://github.com/Lucian-prog
   hero:
     logo: LUCIAN_NOTES
-    avatar: /images/avatar.png
     title: Lucian's Digital IC Notes
     subtitle: Digital Design · Computer Architecture · RISC-V · Hardware Engineering
     description: 记录数字 IC、计算机体系结构与硬件工程学习过程

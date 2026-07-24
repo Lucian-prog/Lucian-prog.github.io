@@ -762,30 +762,6 @@ a {
   50% { box-shadow: 0 18px 52px var(--accent-soft); }
 }
 
-.avatar-container {
-  width: 106px;
-  height: 106px;
-  margin: 0 auto 20px;
-  padding: 4px;
-  border: 1px dashed var(--text-muted);
-  border-radius: 50%;
-  /* 头像呼吸光环，呼应"女仆整理时间轴"的人设 */
-  animation: avatar-halo 4.2s ease-in-out infinite;
-}
-
-@keyframes avatar-halo {
-  0%, 100% { box-shadow: 0 0 0 0 var(--accent-soft), 0 0 22px var(--accent-soft); }
-  50% { box-shadow: 0 0 0 5px var(--accent-faint), 0 0 34px var(--accent-soft); }
-}
-
-.avatar {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  display: block;
-}
-
 .site-title {
   margin: 0 0 8px;
   color: var(--text-silver);
@@ -2959,10 +2935,6 @@ body.has-editor-workspace .container {
     opacity: 1;
     transform: none;
   }
-
-  .avatar-container {
-    animation: none;
-  }
 }
 
 /* Claude reading themes */
@@ -3104,15 +3076,6 @@ body.has-editor-workspace .container {
 
 :root[data-theme^='claude-'] .portal-mark {
   display: none;
-}
-
-:root[data-theme^='claude-'] .avatar-container {
-  width: 78px;
-  height: 78px;
-  margin-bottom: 18px;
-  padding: 3px;
-  border: 1px solid var(--border-color);
-  background: var(--claude-surface-strong);
 }
 
 :root[data-theme^='claude-'] .site-title {
