@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    - cron: '23 21 * * *'   # 每日 UTC 21:23（北京时间 5:23）刷新 GitHub 元数据
 
 permissions:
   contents: read
@@ -24,6 +26,10 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Build project matrix data
+        run: node scripts/build_projects_data.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npx hexo clean && npx hexo generate
       - uses: actions/upload-pages-artifact@v3
         with:

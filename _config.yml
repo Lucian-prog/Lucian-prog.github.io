@@ -30,6 +30,7 @@ category_dir: categories
 code_dir: downloads/code
 i18n_dir: :lang
 skip_render:
+  - "projects/**"   # 项目矩阵 SPA（纯静态页，跳过 Hexo 渲染原样复制）
 
 # Writing
 new_post_name: :title.md

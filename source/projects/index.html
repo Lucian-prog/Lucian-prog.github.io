@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目矩阵 · Project Matrix</title>
+<style>
+:root {
+  --bg: #0d1117; --bg-card: #161b22; --bg-card-hover: #1c2330;
+  --border: #30363d; --text: #e6edf3; --text-dim: #8b949e;
+  --accent: #39c5cf; --accent-dim: #39c5cf33;
+  --spec: #8b949e; --rtl: #58a6ff; --sim: #39c5cf;
+  --fpga: #3fb950; --frozen: #bc8cff; --active: #d29922;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.6; min-height: 100vh;
+}
+.wrap { max-width: 1180px; margin: 0 auto; padding: 40px 20px 60px; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header { margin-bottom: 28px; }
+header h1 { font-size: 1.7rem; letter-spacing: .5px; }
+header h1 .en { color: var(--accent); }
+header .desc { color: var(--text-dim); margin-top: 4px; font-size: .92rem; }
+header .upd { color: var(--text-dim); font-size: .8rem; margin-top: 2px; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.stat { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+.stat .num { font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+.stat .label { color: var(--text-dim); font-size: .82rem; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { padding: 6px 16px; border: 1px solid var(--border); border-radius: 999px;
+  color: var(--text-dim); cursor: pointer; font-size: .88rem; background: transparent; transition: all .15s; }
+.tab:hover { border-color: var(--accent); color: var(--text); }
+.tab.on { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px 20px; display: flex; flex-direction: column; gap: 10px;
+  transition: transform .15s, border-color .15s, background .15s; }
+.card:hover { transform: translateY(-3px); border-color: var(--accent); background: var(--bg-card-hover); }
+.card .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.card .name { font-size: 1.05rem; font-weight: 700; }
+.card .sub { color: var(--text-dim); font-size: .84rem; }
+.badge { padding: 2px 10px; border-radius: 999px; font-size: .74rem; white-space: nowrap;
+  border: 1px solid; font-weight: 600; }
+
+.stages { display: flex; gap: 4px; margin-top: 2px; }
+.stages .seg { flex: 1; height: 6px; border-radius: 3px; background: var(--border); position: relative; }
+.stages .seg.done { background: var(--accent); }
+.stages-label { display: flex; justify-content: space-between; color: var(--text-dim); font-size: .68rem; }
+.stages-label .cur { color: var(--accent); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: .76rem; padding: 2px 9px; border-radius: 6px;
+  background: var(--accent-dim); color: var(--accent); }
+.tag { font-size: .74rem; padding: 2px 8px; border-radius: 6px;
+  background: #21262d; color: var(--text-dim); border: 1px solid var(--border); }
+.hl { font-size: .8rem; color: var(--active); border-left: 3px solid var(--active);
+  padding-left: 10px; }
+.card .foot { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center; font-size: .82rem; }
+.card .foot .meta-dim { color: var(--text-dim); font-size: .76rem; }
+
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 32px; }
+.chart-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.chart-box h3 { font-size: .95rem; margin-bottom: 8px; color: var(--text); }
+.chart { width: 100%; height: 240px; }
+
+.timeline { margin-top: 32px; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 18px 22px; }
+.timeline h3 { font-size: .95rem; margin-bottom: 12px; }
+.tl-item { display: flex; gap: 12px; padding: 7px 0; border-bottom: 1px dashed var(--border); font-size: .86rem; }
+.tl-item:last-child { border-bottom: none; }
+.tl-item .date { color: var(--text-dim); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+.empty, .loading { text-align: center; color: var(--text-dim); padding: 60px 0; }
+@media (max-width: 640px) { .wrap { padding: 24px 14px 40px; } header h1 { font-size: 1.35rem; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="en">Project Matrix</span> · 项目矩阵</h1>
+    <div class="desc" id="desc">数字 IC 前端学习与工程实践的全景看板</div>
+    <div class="upd" id="updated"></div>
+  </header>
+
+  <div class="stats" id="stats"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="grid" id="grid"><div class="loading">加载中…</div></div>
+  <div class="charts" id="charts"></div>
+  <div class="timeline" id="timeline"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+const STATUS = {
+  'spec':      { label: '定义中',   color: 'var(--spec)' },
+  'rtl':       { label: '实现中',   color: 'var(--rtl)' },
+  'sim-pass':  { label: '仿真通过', color: 'var(--sim)' },
+  'fpga-pass': { label: '上板通过', color: 'var(--fpga)' },
+  'frozen':    { label: '冻结归档', color: 'var(--frozen)' },
+  'active':    { label: '持续迭代', color: 'var(--active)' },
+};
+const colorHex = { spec:'#8b949e', 'rtl':'#58a6ff', 'sim-pass':'#39c5cf',
+  'fpga-pass':'#3fb950', 'frozen':'#bc8cff', 'active':'#d29922' };
+
+let DATA = null, CUR = '全部';
+
+function esc(s){ return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function render() {
+  const ps = DATA.projects;
+  // 统计条
+  const delivered = ps.filter(p => ['fpga-pass','frozen'].includes(p.status)).length;
+  const stars = ps.reduce((a,p) => a + (p.github?.stars || 0), 0);
+  document.getElementById('stats').innerHTML = [
+    [ps.length, '项目总数'], [ps.filter(p => !['frozen'].includes(p.status)).length, '进行中'],
+    [delivered, '已交付上板/归档'], [stars, 'GitHub Stars'],
+  ].map(([n,l]) => `<div class="stat"><div class="num">${n}</div><div class="label">${l}</div></div>`).join('');
+
+  // 筛选 tab
+  const groups = ['全部', ...new Set(ps.map(p => p.group))];
+  document.getElementById('tabs').innerHTML = groups.map(g =>
+    `<button class="tab ${g===CUR?'on':''}" onclick="CUR='${g}';render()">${g}</button>`).join('');
+
+  // 卡片墙
+  const shown = ps.filter(p => CUR==='全部' || p.group===CUR);
+  const stages = DATA.stages || [];
+  document.getElementById('grid').innerHTML = shown.map(p => {
+    const st = STATUS[p.status] || STATUS.spec;
+    const c = colorHex[p.status] || colorHex.spec;
+    const stageN = Math.min(p.stage||0, stages.length);
+    const segs = stages.map((_,i) => `<div class="seg ${i<stageN?'done':''}"></div>`).join('');
+    const labels = stages.map((s,i) =>
+      `<span class="${i===stageN-1?'cur':''}">${s}</span>`).join('');
+    const g = p.github;
+    return `<div class="card">
+      <div class="top"><div><div class="name">${esc(p.name)}</div>
+        <div class="sub">${esc(p.subtitle)}</div></div>
+        <span class="badge" style="color:${c};border-color:${c}">${st.label}</span></div>
+      <div class="stages">${segs}</div>
+      <div class="stages-label">${labels}</div>
+      <div class="chips">${(p.metrics||[]).map(m=>`<span class="chip">${esc(m)}</span>`).join('')}
+        ${(p.stack||[]).map(s=>`<span class="tag">${esc(s)}</span>`).join('')}</div>
+      ${p.highlight ? `<div class="hl">${esc(p.highlight)}</div>` : ''}
+      <div class="foot">
+        ${p.repo_url ? `<a href="${esc(p.repo_url)}" target="_blank" rel="noopener">仓库 ↗</a>` : '<span class="meta-dim">未开源</span>'}
+        <span class="meta-dim">${g ? `★ ${g.stars}${g.language ? ' · ' + g.language : ''}` : ''}</span>
+      </div></div>`;
+  }).join('');
+
+  // 时间线：按最近推送排序
+  const act = ps.filter(p => p.github?.pushed_at)
+    .sort((a,b) => b.github.pushed_at.localeCompare(a.github.pushed_at));
+  document.getElementById('timeline').innerHTML = '<h3>最近活动</h3>' + (act.length
+    ? act.map(p => `<div class="tl-item"><span class="date">${(p.github.pushed_at||'').slice(0,10)}</span>
+        <span>${esc(p.name)} <span class="meta-dim" style="color:var(--text-dim)">— 仓库有新推送</span></span></div>`).join('')
+    : '<div class="tl-item">暂无 GitHub 仓库活动数据</div>');
+
+  renderCharts();
+}
+
+function renderCharts() {
+  if (typeof echarts === 'undefined') return;   // CDN 失败优雅降级
+  const box = document.getElementById('charts');
+  box.innerHTML = `<div class="chart-box"><h3>状态分布</h3><div class="chart" id="c1"></div></div>
+    <div class="chart-box"><h3>五门阶段进度</h3><div class="chart" id="c2"></div></div>`;
+  const ps = DATA.projects;
+  // 状态环形
+  const byStatus = {};
+  ps.forEach(p => byStatus[p.status] = (byStatus[p.status]||0)+1);
+  const c1 = echarts.init(document.getElementById('c1'), 'dark');
+  c1.setOption({ backgroundColor:'transparent',
+    tooltip:{trigger:'item'},
+    series:[{ type:'pie', radius:['45%','72%'], center:['50%','52%'],
+      label:{color:'#8b949e', formatter:'{b} {c}'},
+      data:Object.entries(byStatus).map(([k,v]) => ({name:(STATUS[k]||k).label, value:v,
+        itemStyle:{color:colorHex[k]||'#8b949e'}})) }]});
+  // 五门堆叠
+  const c2 = echarts.init(document.getElementById('c2'), 'dark');
+  const rows = ps.map(p => ({name:p.name, stage:p.stage||0}));
+  const maxStage = (DATA.stages||[]).length || 5;
+  c2.setOption({ backgroundColor:'transparent',
+    tooltip:{trigger:'axis'}, legend:{top:0, textStyle:{color:'#8b949e', fontSize:11}},
+    grid:{left:160, right:20, top:30, bottom:10},
+    yAxis:{type:'category', data:rows.map(r=>r.name).reverse(),
+      axisLabel:{color:'#e6edf3', fontSize:11}, axisLine:{lineStyle:{color:'#30363d'}}},
+    xAxis:{type:'value', max:maxStage, splitLine:{lineStyle:{color:'#21262d'}},
+      axisLabel:{color:'#8b949e'}},
+    series:[
+      {name:'已完成', type:'bar', stack:'s', itemStyle:{color:'#39c5cf'},
+       data:rows.map(r=>r.stage).reverse(), barWidth:12},
+      {name:'剩余', type:'bar', stack:'s', itemStyle:{color:'#21262d'},
+       data:rows.map(r=>maxStage-r.stage).reverse()}]});
+  window.addEventListener('resize', () => { c1.resize(); c2.resize(); });
+}
+
+fetch('../data/projects.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then(d => {
+    DATA = d;
+    document.getElementById('desc').textContent = d.meta?.description || document.getElementById('desc').textContent;
+    document.title = d.meta?.title || document.title;
+    document.getElementById('updated').textContent =
+      '数据更新于 ' + new Date(d.generated_at).toLocaleString('zh-CN') + ' · 与 GitHub 仓库自动同步';
+    render();
+  })
+  .catch(() => {
+    document.getElementById('grid').innerHTML =
+      '<div class="empty">数据加载失败：请确认已运行数据合成脚本（source/data/projects.json）</div>';
+  });
+</script>
+</body>
+</html>

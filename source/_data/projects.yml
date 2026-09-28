@@ -1,0 +1,129 @@
+# ============================================================
+# 项目矩阵数据源（Project Matrix）
+# 用途：/projects/ 可视化页面的单一数据源
+# 流程：本文件（手维护）→ Actions 合成 GitHub 元数据
+#       → source/data/projects.json（自动生成，勿手改）
+# 新增字段：前端按 schema 渲染，加字段即生效
+#
+# 字段说明：
+#   id        唯一标识（英文）
+#   name      项目名
+#   subtitle  一句话定位
+#   group     分组：主编队 / 工程实践 / 学习演练（筛选 tab）
+#   status    spec | rtl | sim-pass | fpga-pass | frozen | active
+#   stage     五门进度 1~5（定义/实现/验证/上板/归档）
+#   metrics   指标 chips（数组）
+#   stack     技术栈标签（数组）
+#   repo      GitHub 仓库名（owner/name，留空则不拉元数据）
+#   repo_path 仓库内子路径（拼接到链接）
+#   highlight 亮点行（奖项/论文等，可省略）
+# ============================================================
+
+meta:
+  title: "项目矩阵 · Project Matrix"
+  description: "数字 IC 前端学习与工程实践的全景看板"
+
+stages: ["定义", "实现", "验证", "上板", "归档"]
+
+projects:
+  # ---------- 主编队 ----------
+  - id: cnn-soc
+    name: "CNN Accelerator SoC"
+    subtitle: "Cortex-M0 + AHB-Lite 总线矩阵 + CNN 加速器"
+    group: "主编队"
+    status: "fpga-pass"
+    stage: 4
+    metrics: ["13 μs/推理", "91% 识别率", "LUT 10.82%"]
+    stack: [Verilog, AHB-Lite, Vivado, Keil]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/cnn_ram"
+    highlight: "一作论文《基于 FPGA SoC 的数字识别系统设计》（科技视界 2026）"
+
+  - id: audio-contest
+    name: "安路 FPGA 多通道音频系统"
+    subtitle: "2025 FPGA 创新设计大赛参赛作品（开源模板）"
+    group: "主编队"
+    status: "frozen"
+    stage: 5
+    metrics: ["全国一等奖", "★9 开源"]
+    stack: [Verilog, Anlogic EG4S20, I2S]
+    repo: "Lucian-prog/2025-fpga-anlogic-audio-solution"
+    highlight: "全国一等奖作品，赛后整理为公开模板仓库"
+
+  - id: rtl-agent
+    name: "RTL-Agent"
+    subtitle: "RTL 全流程 AI 反馈链（Verilator lint + Icarus 仿真）"
+    group: "主编队"
+    status: "active"
+    stage: 3
+    metrics: ["V0.3.0", "MCP 服务端"]
+    stack: [Python, Verilator, Icarus, MCP]
+    repo: ""
+
+  # ---------- 工程实践 ----------
+  - id: dma-ctrl
+    name: "AXI DMA 控制器"
+    subtitle: "读写双通道 + 寄存器组 + SVA 验证"
+    group: "工程实践"
+    status: "sim-pass"
+    stage: 3
+    metrics: ["45+37 用例", "SVA 全绿"]
+    stack: [SystemVerilog, AXI4, VCS]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/22.%20dma_ctrl"
+
+  - id: rv32i-core
+    name: "RV32I 五级流水核"
+    subtitle: "RISC-V 处理器（RTL + 分模块 TB）"
+    group: "工程实践"
+    status: "sim-pass"
+    stage: 3
+    metrics: ["五级流水", "冒险处理"]
+    stack: [SystemVerilog, RISC-V]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/20.%20RV32I_Core"
+
+  - id: amba-bus
+    name: "AMBA 总线从机"
+    subtitle: "AHB-Lite / AXI-Lite 从机实现与协议笔记"
+    group: "工程实践"
+    status: "sim-pass"
+    stage: 3
+    metrics: ["AHB-Lite", "AXI-Lite"]
+    stack: [Verilog, AMBA]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/21.%20AMBA_Bus"
+
+  # ---------- 学习演练 ----------
+  - id: cocotb
+    name: "Cocotb 入门"
+    subtitle: "Python 协同仿真验证（counter 示例）"
+    group: "学习演练"
+    status: "rtl"
+    stage: 2
+    metrics: ["Python TB"]
+    stack: [Cocotb, Python, Icarus]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/23.%20cocotb"
+
+  - id: uvm-learn
+    name: "UVM 学习仓"
+    subtitle: "《UVM 实战》ch2 验证平台（VCS 实跑）"
+    group: "学习演练"
+    status: "rtl"
+    stage: 2
+    metrics: ["ch2 平台跑通", "14 天计划"]
+    stack: [UVM, SystemVerilog, VCS]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/uvm_learn"
+
+  - id: bagu
+    name: "面试手撕练习"
+    subtitle: "复位同步 / 时钟切换 / 序列检测 / FIFO / 握手"
+    group: "学习演练"
+    status: "rtl"
+    stage: 2
+    metrics: ["5 个手撕模块"]
+    stack: [Verilog]
+    repo: "Lucian-prog/FPGA"
+    repo_path: "tree/main/Bagu"
