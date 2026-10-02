@@ -123,7 +123,7 @@ projects:
     group: "学习演练"
     status: "rtl"
     stage: 2
-    metrics: ["12 个手撕模块"]
+    metrics: ["13 个手撕模块"]
     stack: [Verilog]
     repo: "Lucian-prog/FPGA"
     repo_path: "tree/main/Bagu"
